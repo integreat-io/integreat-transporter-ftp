@@ -1,0 +1,43 @@
+{
+  "name": "integreat-transporter-ftp",
+  "version": "0.1.0",
+  "description": "FTP transporter for Integreat",
+  "keywords": [
+    "integreat",
+    "ftp",
+    "sftp"
+  ],
+  "author": "Kjell-Morten Bratsberg Thorsen <kjellmorten@integreat.io> (https://integreat.io/)",
+  "license": "ISC",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "npm run lint && npm run build && nyc --reporter=text-summary ava --config ./ava-dist.config.js",
+    "test:inspect": "node --inspect node_modules/ava/profile.js",
+    "test:watch": "npm run dev",
+    "dev": "ava --watch",
+    "build": "tsc",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "nyc:report": "nyc report --reporter=text --reporter=html",
+    "lint": "eslint --ext .ts src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/integreat-io/integreat-transporter-ftp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/integreat-io/integreat-transporter-ftp/issues"
+  },
+  "homepage": "https://github.com/integreat-io/integreat-transporter-ftp#readme",
+  "engines": {
+    "node": ">= 12.9"
+  },
+  "dependencies": {
+    "@types/sinon": "^10.0.6",
+    "sinon": "^12.0.1",
+    "ssh2-sftp-client": "^7.1.0"
+  },
+  "devDependencies": {
+    "@integreat/ts-dev-setup": "^2.1.0"
+  }
+}
