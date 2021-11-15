@@ -121,6 +121,53 @@ test('should fetch directory from ftp server', async (t) => {
   t.deepEqual(ret.data, expectedData)
 })
 
+test('should zap double slashes from ids', async (t) => {
+  const client = {
+    exists: async () => 'd',
+    list: async () => dirData,
+  } as unknown as FtpClient
+  const action = {
+    type: 'GET',
+    payload: { type: 'entry' },
+    meta: {
+      options: {
+        host: 'server.test',
+        port: '22',
+        path: '/',
+      },
+    },
+  }
+  const connection = { status: 'ok', client }
+  const expectedData = [
+    {
+      id: '/entry2.json',
+      name: 'entry2.json',
+      type: 'file',
+      size: 303741975,
+      updatedAt: 1636921620000,
+    },
+    {
+      id: '/archive',
+      name: 'archive',
+      type: 'dir',
+      size: 237,
+      updatedAt: 1636921620000,
+    },
+    {
+      id: '/entry1.json',
+      name: 'entry1.json',
+      type: 'file',
+      size: 303741975,
+      updatedAt: 1636890180000,
+    },
+  ]
+
+  const ret = await send(action, connection)
+
+  t.is(ret.status, 'ok', ret.error)
+  t.deepEqual(ret.data, expectedData)
+})
+
 test('should return notfound when file does not exist', async (t) => {
   const existsStub = sinon.stub().resolves(false)
   const client = { exists: existsStub } as unknown as FtpClient
@@ -145,7 +192,7 @@ test('should return notfound when file does not exist', async (t) => {
   t.is(existsStub.args[0][0], '/folder/entry0.json')
 })
 
-test('should return badresponse when file is unknown type', async (t) => {
+test('should return badresponse when file is of unknown type', async (t) => {
   const existsStub = sinon.stub().resolves('u') // File type u doesn't exist
   const client = { exists: existsStub } as unknown as FtpClient
   const action = {
@@ -268,4 +315,4 @@ test('should return badrequest when no client', async (t) => {
 
 test.todo('should return badresponse when file is binary')
 test.todo('should handle link type')
-test.todo('should use auth')
+test.todo('should only accept GET action')

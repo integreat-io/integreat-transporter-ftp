@@ -14,10 +14,13 @@ function mapType(type: '-' | 'd' | 'l') {
   }
 }
 
+const removeTrailingSlash = (path: string) =>
+  path.endsWith('/') ? path.slice(0, path.length - 2) : path
+
 const prepareFileData =
   (path: string) =>
   ({ name, type, size, modifyTime }: FtpClient.FileInfo) => ({
-    id: `${path}/${name}`,
+    id: `${removeTrailingSlash(path)}/${name}`,
     name,
     type: mapType(type),
     size,

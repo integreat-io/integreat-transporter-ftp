@@ -4,7 +4,7 @@ import { EndpointOptions } from './types'
 function extractFromUri(uri: string) {
   try {
     const { hostname: host, port, pathname: path } = new url.URL(uri)
-    return { host, port, path }
+    return { host, port, path: path || '/' }
   } catch {
     return {}
   }

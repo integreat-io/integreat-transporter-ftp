@@ -38,6 +38,22 @@ test('should extract host, port, and path from uri', (t) => {
   t.deepEqual(ret, expected)
 })
 
+test('should extract root path as slash', (t) => {
+  const options = {
+    uri: 'sftp://server.test:22',
+  }
+  const expected = {
+    uri: 'sftp://server.test:22',
+    host: 'server.test',
+    port: '22',
+    path: '/',
+  }
+
+  const ret = prepareOptions(options)
+
+  t.deepEqual(ret, expected)
+})
+
 test('should handle invalid uri', (t) => {
   const options = {
     uri: 'no uri',
