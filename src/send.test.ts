@@ -89,18 +89,21 @@ test('should fetch directory from ftp server', async (t) => {
   const connection = { status: 'ok', client }
   const expectedData = [
     {
+      id: '/folder/entry2.json',
       name: 'entry2.json',
       type: 'file',
       size: 303741975,
       updatedAt: 1636921620000,
     },
     {
+      id: '/folder/archive',
       name: 'archive',
       type: 'dir',
       size: 237,
       updatedAt: 1636921620000,
     },
     {
+      id: '/folder/entry1.json',
       name: 'entry1.json',
       type: 'file',
       size: 303741975,

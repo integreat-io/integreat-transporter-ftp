@@ -14,21 +14,19 @@ function mapType(type: '-' | 'd' | 'l') {
   }
 }
 
-const prepareFileData = ({
-  name,
-  type,
-  size,
-  modifyTime,
-}: FtpClient.FileInfo) => ({
-  name,
-  type: mapType(type),
-  size,
-  updatedAt: modifyTime,
-})
+const prepareFileData =
+  (path: string) =>
+  ({ name, type, size, modifyTime }: FtpClient.FileInfo) => ({
+    id: `${path}/${name}`,
+    name,
+    type: mapType(type),
+    size,
+    updatedAt: modifyTime,
+  })
 
 async function fetchDirectory(path: string, client: FtpClient) {
   const data = await client.list(path)
-  return { status: 'ok', data: data.map(prepareFileData) }
+  return { status: 'ok', data: data.map(prepareFileData(path)) }
 }
 
 async function fetchFile(path: string, client: FtpClient) {
