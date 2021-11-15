@@ -34,6 +34,35 @@ test('should connect and return connection with client', async (t) => {
   t.deepEqual(calledOptions, expectedOptions)
 })
 
+test('should connect with auth', async (t) => {
+  let calledOptions: FtpClient.ConnectOptions | null = null
+  class MockClient extends FtpClient {
+    async connect(options: FtpClient.ConnectOptions) {
+      calledOptions = options
+      return {} as SFTPWrapper
+    }
+  }
+  const options = {
+    host: 'server.test',
+    port: 22,
+    path: '/folder',
+  }
+  const auth = { key: 'johnf', secret: 's3cr3t' }
+  const connection = null
+  const expectedOptions = {
+    host: 'server.test',
+    port: 22,
+    username: 'johnf',
+    password: 's3cr3t',
+  }
+
+  const ret = await connect(MockClient)(options, auth, connection)
+
+  t.is(ret.status, 'ok')
+  t.true(ret.client instanceof MockClient)
+  t.deepEqual(calledOptions, expectedOptions)
+})
+
 test('should cast port to number', async (t) => {
   let calledOptions: FtpClient.ConnectOptions | null = null
   class MockClient extends FtpClient {
@@ -135,14 +164,5 @@ test('should set status to badrequest when host or port are missing', async (t) 
   t.is(ret.client, undefined)
   t.is(calledOptions, null)
 })
-
-// let Client = require('ssh2-sftp-client');
-// let sftp = new Client();
-// sftp.connect({
-//   host: '127.0.0.1',
-//   port: '8080',
-//   username: 'username',
-//   password: '******'
-// }).then(() => {
 
 test.todo('should return error when connect() throws')

@@ -1,7 +1,19 @@
 import FtpClient = require('ssh2-sftp-client')
 import { EndpointOptions, Connection } from './types'
 
-const prepareOptions = ({ host, port }: EndpointOptions) => ({
+const extractAuth = (auth: Record<string, unknown> | null) =>
+  auth
+    ? {
+        username: auth.key as string | undefined,
+        password: auth.secret as string | undefined,
+      }
+    : {}
+
+const prepareOptions = (
+  { host, port }: EndpointOptions,
+  auth: Record<string, unknown> | null
+) => ({
+  ...extractAuth(auth),
   host,
   port: typeof port === 'string' ? Number.parseInt(port, 10) : port,
 })
@@ -9,7 +21,7 @@ const prepareOptions = ({ host, port }: EndpointOptions) => ({
 export default (Client = FtpClient) =>
   async function connect(
     options: EndpointOptions,
-    _auth: Record<string, unknown> | null,
+    auth: Record<string, unknown> | null,
     connection: Connection | null = null
   ): Promise<Connection> {
     if (connection?.status === 'ok') {
@@ -17,7 +29,7 @@ export default (Client = FtpClient) =>
     }
 
     const client = new Client()
-    const clientOptions = prepareOptions(options)
+    const clientOptions = prepareOptions(options, auth)
     if (!clientOptions.host || Number.isNaN(clientOptions.port)) {
       return {
         status: 'badrequest',
