@@ -4,6 +4,8 @@ Transporter that lets
 [Integreat](https://github.com/integreat-io/integreat) send and receive data
 over ftp/sftp.
 
+**Note:** Only receiving is implemented at this time.
+
 ## Getting started
 
 ### Prerequisits
@@ -15,20 +17,20 @@ Requires node v12.9 and Integreat v0.8.
 Install from npm:
 
 ```
-npm install integreat-transport-http
+npm install integreat-transporter-ftp
 ```
 
 Example of use:
 
-```typescript
-import integreat from 'integreat'
-import ftp from 'integreat-transport-ftp'
+```javascript
+import Integreat from 'integreat'
+import ftp from 'integreat-transporter-ftp'
 import defs from './config'
 
-const resources = integreat.mergeResources(integreat.resources(), {
+const resources = Integreat.mergeResources(integreat.resources(), {
   transporters: { ftp },
 })
-const great = integreat(defs, resources)
+const great = Integreat.create(defs, resources)
 
 // ... and then dispatch actions as usual
 ```
