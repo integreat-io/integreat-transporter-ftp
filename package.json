@@ -1,7 +1,7 @@
 {
   "name": "integreat-transporter-ftp",
   "version": "0.1.0",
-  "description": "FTP transporter for Integreat",
+  "description": "(S)FTP transporter for Integreat",
   "keywords": [
     "integreat",
     "ftp",
