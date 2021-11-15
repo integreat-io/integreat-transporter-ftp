@@ -142,6 +142,29 @@ test('should connect and return new connection when given connection has an erro
   t.deepEqual(calledOptions, expectedOptions)
 })
 
+test('should return error when client.connect() throws', async (t) => {
+  class MockClient extends FtpClient {
+    async connect(_options: FtpClient.ConnectOptions) {
+      throw new Error('No more, please!')
+      return {} as SFTPWrapper
+    }
+  }
+
+  const options = {
+    host: 'server.test',
+    port: 22,
+    path: '/folder',
+  }
+  const auth = null
+  const connection = null
+
+  const ret = await connect(MockClient)(options, auth, connection)
+
+  t.is(ret.status, 'error')
+  t.is(typeof ret.error, 'string')
+  t.falsy(ret.client)
+})
+
 test('should set status to badrequest when host or port are missing', async (t) => {
   let calledOptions: FtpClient.ConnectOptions | null = null
   class MockClient extends FtpClient {
@@ -164,5 +187,3 @@ test('should set status to badrequest when host or port are missing', async (t) 
   t.is(ret.client, undefined)
   t.is(calledOptions, null)
 })
-
-test.todo('should return error when connect() throws')

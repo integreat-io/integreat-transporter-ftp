@@ -37,6 +37,10 @@ export default (Client = FtpClient) =>
       }
     }
 
-    await client.connect(clientOptions)
-    return { status: 'ok', client }
+    try {
+      await client.connect(clientOptions)
+      return { status: 'ok', client }
+    } catch (error) {
+      return { status: 'error', error: `Connection failed. ${error}` }
+    }
   }
