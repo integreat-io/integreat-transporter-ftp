@@ -42,6 +42,10 @@ export default async function send(
   action: Action,
   connection: Connection | null
 ): Promise<Response> {
+  if (action.type !== 'GET') {
+    return { status: 'noaction', error: 'FTP only supports GET for now' }
+  }
+
   const client = connection?.client
   if (connection?.status !== 'ok' || !client) {
     return {

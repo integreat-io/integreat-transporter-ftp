@@ -313,6 +313,25 @@ test('should return badrequest when no client', async (t) => {
   t.is(typeof ret.error, 'string')
 })
 
+test('should return noaction for SET action', async (t) => {
+  const client = {} as unknown as FtpClient
+  const action = {
+    type: 'SET',
+    payload: { type: 'entry', data: { id: 'ent1' } },
+    meta: {
+      options: {
+        host: 'server.test',
+        port: '22',
+        path: '/folder/entry1.json',
+      },
+    },
+  }
+  const connection = { status: 'ok', client }
+
+  const ret = await send(action, connection)
+
+  t.is(ret.status, 'noaction', ret.error)
+})
+
 test.todo('should return badresponse when file is binary')
 test.todo('should handle link type')
-test.todo('should only accept GET action')
