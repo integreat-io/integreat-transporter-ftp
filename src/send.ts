@@ -39,8 +39,16 @@ async function fetchFile(path: string, client: FtpClient) {
 
 export default async function send(
   action: Action,
-  _connection: Connection | null
+  connection: Connection | null
 ): Promise<Response> {
+  const client = connection?.client
+  if (connection?.status !== 'ok' || !client) {
+    return {
+      status: 'badrequest',
+      error: 'FTP requires a connection with an active client',
+    }
+  }
+
   if (!action.meta?.options) {
     return {
       status: 'badrequest',
@@ -48,17 +56,11 @@ export default async function send(
     }
   }
 
-  const { path, client } = action.meta.options
+  const { path } = action.meta.options
   if (!path) {
     return {
       status: 'badrequest',
       error: 'FTP requires a path',
-    }
-  }
-  if (!client) {
-    return {
-      status: 'badrequest',
-      error: 'FTP requires a client',
     }
   }
 

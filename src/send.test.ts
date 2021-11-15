@@ -41,10 +41,6 @@ const dirData = [
 
 // Tests
 
-// if connection ...
-// Check if path exists
-// If type `-` => client.get(path) -- returns buffer
-// If type `d` => client.list(path) -- return file objects in dir
 test('should fetch data from ftp server', async (t) => {
   const existsStub = sinon.stub().resolves('-')
   const getStub = sinon
@@ -59,13 +55,13 @@ test('should fetch data from ftp server', async (t) => {
         host: 'server.test',
         port: '22',
         path: '/folder/entry1.json',
-        client,
       },
     },
   }
+  const connection = { status: 'ok', client }
   const expectedData = '{"id":"ent1","title":"Entry 1"}'
 
-  const ret = await send(action, null)
+  const ret = await send(action, connection)
 
   t.is(ret.status, 'ok', ret.error)
   t.is(existsStub.callCount, 1)
@@ -87,10 +83,10 @@ test('should fetch directory from ftp server', async (t) => {
         host: 'server.test',
         port: '22',
         path: '/folder',
-        client,
       },
     },
   }
+  const connection = { status: 'ok', client }
   const expectedData = [
     {
       name: 'entry2.json',
@@ -112,7 +108,7 @@ test('should fetch directory from ftp server', async (t) => {
     },
   ]
 
-  const ret = await send(action, null)
+  const ret = await send(action, connection)
 
   t.is(ret.status, 'ok', ret.error)
   t.is(existsStub.callCount, 1)
@@ -133,12 +129,12 @@ test('should return notfound when file does not exist', async (t) => {
         host: 'server.test',
         port: '22',
         path: '/folder/entry0.json',
-        client,
       },
     },
   }
+  const connection = { status: 'ok', client }
 
-  const ret = await send(action, null)
+  const ret = await send(action, connection)
 
   t.is(ret.status, 'notfound', ret.error)
   t.is(typeof ret.error, 'string')
@@ -157,12 +153,12 @@ test('should return badresopnse when file is unknown type', async (t) => {
         host: 'server.test',
         port: '22',
         path: '/folder/entry2.json',
-        client,
       },
     },
   }
+  const connection = { status: 'ok', client }
 
-  const ret = await send(action, null)
+  const ret = await send(action, connection)
 
   t.is(ret.status, 'badresponse', ret.error)
   t.is(typeof ret.error, 'string')
@@ -171,13 +167,15 @@ test('should return badresopnse when file is unknown type', async (t) => {
 })
 
 test('should return badrequest when no options', async (t) => {
+  const client = {} as unknown as FtpClient
   const action = {
     type: 'GET',
     payload: { type: 'entry' },
     meta: {},
   }
+  const connection = { status: 'ok', client }
 
-  const ret = await send(action, null)
+  const ret = await send(action, connection)
 
   t.is(ret.status, 'badrequest', ret.error)
   t.is(typeof ret.error, 'string')
@@ -193,12 +191,53 @@ test('should return badrequest when no path', async (t) => {
         host: 'server.test',
         port: '22',
         // No path,
-        client,
       },
     },
   }
+  const connection = { status: 'ok', client }
 
-  const ret = await send(action, null)
+  const ret = await send(action, connection)
+
+  t.is(ret.status, 'badrequest', ret.error)
+  t.is(typeof ret.error, 'string')
+})
+
+test('should return badrequest when connection has error', async (t) => {
+  const client = {} as unknown as FtpClient
+  const action = {
+    type: 'GET',
+    payload: { type: 'entry' },
+    meta: {
+      options: {
+        host: 'server.test',
+        port: '22',
+        path: '/folder/entry1.json',
+      },
+    },
+  }
+  const connection = { status: 'badrequest', error: 'No host or path', client }
+
+  const ret = await send(action, connection)
+
+  t.is(ret.status, 'badrequest', ret.error)
+  t.is(typeof ret.error, 'string')
+})
+
+test('should return badrequest when no connection', async (t) => {
+  const action = {
+    type: 'GET',
+    payload: { type: 'entry' },
+    meta: {
+      options: {
+        host: 'server.test',
+        port: '22',
+        path: '/folder/entry1.json',
+      },
+    },
+  }
+  const connection = null
+
+  const ret = await send(action, connection)
 
   t.is(ret.status, 'badrequest', ret.error)
   t.is(typeof ret.error, 'string')
@@ -213,12 +252,12 @@ test('should return badrequest when no client', async (t) => {
         host: 'server.test',
         port: '22',
         path: '/folder/entry1.json',
-        // No client,
       },
     },
   }
+  const connection = { status: 'ok', client: undefined }
 
-  const ret = await send(action, null)
+  const ret = await send(action, connection)
 
   t.is(ret.status, 'badrequest', ret.error)
   t.is(typeof ret.error, 'string')
