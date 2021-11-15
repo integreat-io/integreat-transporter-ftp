@@ -142,7 +142,7 @@ test('should return notfound when file does not exist', async (t) => {
   t.is(existsStub.args[0][0], '/folder/entry0.json')
 })
 
-test('should return badresopnse when file is unknown type', async (t) => {
+test('should return badresponse when file is unknown type', async (t) => {
   const existsStub = sinon.stub().resolves('u') // File type u doesn't exist
   const client = { exists: existsStub } as unknown as FtpClient
   const action = {
