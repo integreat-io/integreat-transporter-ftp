@@ -61,8 +61,8 @@ export default async function send(
     }
   }
 
-  const { path } = action.meta.options
-  if (!path) {
+  const { uri } = action.meta.options
+  if (!uri) {
     return {
       status: 'badrequest',
       error: 'FTP requires a path',
@@ -70,14 +70,14 @@ export default async function send(
   }
 
   // eslint-disable-next-line security/detect-non-literal-fs-filename
-  const fileType = await client.exists(path)
+  const fileType = await client.exists(uri)
   switch (fileType) {
     case false:
-      return { status: 'notfound', error: `Could not find '${path}'` }
+      return { status: 'notfound', error: `Could not find '${uri}'` }
     case 'd':
-      return await fetchDirectory(path, client)
+      return await fetchDirectory(uri, client)
     case '-':
-      return await fetchFile(path, client)
+      return await fetchFile(uri, client)
     default:
       return {
         status: 'badresponse',

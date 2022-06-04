@@ -54,7 +54,7 @@ test('should fetch data from ftp server', async (t) => {
       options: {
         host: 'server.test',
         port: '22',
-        path: '/folder/entry1.json',
+        uri: '/folder/entry1.json',
       },
     },
   }
@@ -82,7 +82,7 @@ test('should fetch directory from ftp server', async (t) => {
       options: {
         host: 'server.test',
         port: '22',
-        path: '/folder',
+        uri: '/folder',
       },
     },
   }
@@ -133,7 +133,7 @@ test('should zap double slashes from ids', async (t) => {
       options: {
         host: 'server.test',
         port: '22',
-        path: '/',
+        uri: '/',
       },
     },
   }
@@ -178,7 +178,7 @@ test('should return notfound when file does not exist', async (t) => {
       options: {
         host: 'server.test',
         port: '22',
-        path: '/folder/entry0.json',
+        uri: '/folder/entry0.json',
       },
     },
   }
@@ -202,7 +202,7 @@ test('should return badresponse when file is of unknown type', async (t) => {
       options: {
         host: 'server.test',
         port: '22',
-        path: '/folder/entry2.json',
+        uri: '/folder/entry2.json',
       },
     },
   }
@@ -231,7 +231,7 @@ test('should return badrequest when no options', async (t) => {
   t.is(typeof ret.error, 'string')
 })
 
-test('should return badrequest when no path', async (t) => {
+test('should return badrequest when no uri', async (t) => {
   const client = {} as unknown as FtpClient
   const action = {
     type: 'GET',
@@ -240,7 +240,7 @@ test('should return badrequest when no path', async (t) => {
       options: {
         host: 'server.test',
         port: '22',
-        // No path,
+        // No uri,
       },
     },
   }
@@ -261,11 +261,11 @@ test('should return badrequest when connection has error', async (t) => {
       options: {
         host: 'server.test',
         port: '22',
-        path: '/folder/entry1.json',
+        uri: '/folder/entry1.json',
       },
     },
   }
-  const connection = { status: 'badrequest', error: 'No host or path', client }
+  const connection = { status: 'badrequest', error: 'No host or uri', client }
 
   const ret = await send(action, connection)
 
@@ -281,7 +281,7 @@ test('should return badrequest when no connection', async (t) => {
       options: {
         host: 'server.test',
         port: '22',
-        path: '/folder/entry1.json',
+        uri: '/folder/entry1.json',
       },
     },
   }
@@ -301,7 +301,7 @@ test('should return badrequest when no client', async (t) => {
       options: {
         host: 'server.test',
         port: '22',
-        path: '/folder/entry1.json',
+        uri: '/folder/entry1.json',
       },
     },
   }
@@ -322,7 +322,7 @@ test('should return noaction for SET action', async (t) => {
       options: {
         host: 'server.test',
         port: '22',
-        path: '/folder/entry1.json',
+        uri: '/folder/entry1.json',
       },
     },
   }

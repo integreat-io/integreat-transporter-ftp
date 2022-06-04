@@ -42,7 +42,7 @@ Example source configuration:
   id: 'files',
   transporter: 'ftp',
   endpoints: [
-    { options: { uri: 'sftp://api.com:22/folder/latest.csv' } }
+    { options: { host: 'ftp.com', port: 22, uri: '/folder/latest.csv' } }
   ]
 }
 ```

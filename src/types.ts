@@ -3,6 +3,7 @@ import FtpClient = require('ssh2-sftp-client')
 export interface EndpointOptions extends Record<string, unknown> {
   uri?: string
   host?: string
+  baseUri?: string // Alias of host
   port?: number | string
   path?: string
 }

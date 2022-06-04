@@ -17,11 +17,11 @@ const extractAuth = (auth: Record<string, unknown> | null) =>
     : {}
 
 const prepareOptions = (
-  { host, port }: EndpointOptions,
+  { host, baseUri, port }: EndpointOptions,
   auth: Record<string, unknown> | null
 ) => ({
   ...extractAuth(auth),
-  host,
+  host: host || baseUri,
   port: typeof port === 'string' ? Number.parseInt(port, 10) : port,
 })
 
