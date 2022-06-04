@@ -1,5 +1,8 @@
 import FtpClient = require('ssh2-sftp-client')
 import { Action, Response, Connection } from './types'
+import debug = require('debug')
+
+const logInfo = debug('integreat:transporter:ftp')
 
 function mapType(type: '-' | 'd' | 'l') {
   switch (type) {
@@ -43,45 +46,51 @@ export default async function send(
   connection: Connection | null
 ): Promise<Response> {
   if (action.type !== 'GET') {
-    return { status: 'noaction', error: 'FTP only supports GET for now' }
+    const error = `FTP only supports GET for now. Attempted ${action.type}`
+    logInfo(error)
+    return { status: 'noaction', error }
   }
 
   const client = connection?.client
   if (connection?.status !== 'ok' || !client) {
-    return {
-      status: 'badrequest',
-      error: 'FTP requires a connection with an active client',
-    }
+    const error = 'FTP transporter requires a connection with an active client'
+    logInfo(error)
+    return { status: 'badrequest', error }
   }
 
   if (!action.meta?.options) {
-    return {
-      status: 'badrequest',
-      error: 'FTP requires a prepared option object',
-    }
+    const error = 'FTP transporter requires a prepared option object'
+    logInfo(error)
+    return { status: 'badrequest', error }
   }
 
   const { uri } = action.meta.options
   if (!uri) {
-    return {
-      status: 'badrequest',
-      error: 'FTP requires a path',
-    }
+    const error = 'FTP transporter requires a uri'
+    logInfo(error)
+    return { status: 'badrequest', error }
   }
 
   // eslint-disable-next-line security/detect-non-literal-fs-filename
   const fileType = await client.exists(uri)
   switch (fileType) {
     case false:
-      return { status: 'notfound', error: `Could not find '${uri}'` }
+      const error1 = `Could not find '${uri}'`
+      logInfo(error1)
+      return { status: 'notfound', error: error1 }
     case 'd':
-      return await fetchDirectory(uri, client)
+      logInfo(`Fetch FTP directory ${uri}`)
+      const dir = await fetchDirectory(uri, client)
+      logInfo(`Fetched FTP directory ${uri}: ${JSON.stringify(dir)}`)
+      return dir
     case '-':
-      return await fetchFile(uri, client)
+      logInfo(`Fetch FTP file ${uri}`)
+      const file = await fetchFile(uri, client)
+      logInfo(`Fetched FTP file ${uri}: ${JSON.stringify(file)}`)
+      return file
     default:
-      return {
-        status: 'badresponse',
-        error: `FTP returned unknown file type '${fileType}'`,
-      }
+      const error2 = `FTP returned unknown file type '${fileType}'`
+      logInfo(error2)
+      return { status: 'badresponse', error: error2 }
   }
 }
