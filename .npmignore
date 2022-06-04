@@ -4,4 +4,4 @@ dist/tests/
 *.test*
 .*
 tsconfig.json
-*.config.js
+*.config.cjs
