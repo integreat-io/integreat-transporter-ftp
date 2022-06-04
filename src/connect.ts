@@ -1,9 +1,16 @@
 import FtpClient = require('ssh2-sftp-client')
 import { EndpointOptions, Connection } from './types'
 
+const removeKeyAndSecret = ({
+  key,
+  secret,
+  ...auth
+}: Record<string, unknown>) => auth
+
 const extractAuth = (auth: Record<string, unknown> | null) =>
   auth
     ? {
+        ...removeKeyAndSecret(auth),
         username: auth.key as string | undefined,
         password: auth.secret as string | undefined,
       }
