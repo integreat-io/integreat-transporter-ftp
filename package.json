@@ -33,12 +33,12 @@
     "node": ">= 12.9"
   },
   "dependencies": {
-    "@types/sinon": "^10.0.6",
-    "@types/ssh2-sftp-client": "^7.0.0",
+    "@types/sinon": "^10.0.11",
+    "@types/ssh2-sftp-client": "^7.0.1",
     "sinon": "^12.0.1",
-    "ssh2-sftp-client": "^7.1.0"
+    "ssh2-sftp-client": "^7.2.3"
   },
   "devDependencies": {
-    "@integreat/ts-dev-setup": "^2.1.0"
+    "@integreat/ts-dev-setup": "^2.3.0"
   }
 }
