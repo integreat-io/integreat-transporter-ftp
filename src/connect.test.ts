@@ -2,7 +2,7 @@ import test from 'ava'
 import FtpClient = require('ssh2-sftp-client')
 import { SFTPWrapper } from 'ssh2'
 
-import connect from './connect'
+import connect from './connect.js'
 
 // Tests
 

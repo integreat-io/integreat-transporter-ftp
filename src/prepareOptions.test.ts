@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import prepareOptions from './prepareOptions'
+import prepareOptions from './prepareOptions.js'
 
 // Tests
 

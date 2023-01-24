@@ -1,5 +1,5 @@
 import url = require('url')
-import { EndpointOptions } from './types'
+import { EndpointOptions } from './types.js'
 
 function extractFromUri(uri: string) {
   try {

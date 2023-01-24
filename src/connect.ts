@@ -1,5 +1,5 @@
 import FtpClient = require('ssh2-sftp-client')
-import { EndpointOptions, Connection } from './types'
+import { EndpointOptions, Connection } from './types.js'
 
 const removeKeyAndSecret = ({
   key,

@@ -1,5 +1,5 @@
 import FtpClient = require('ssh2-sftp-client')
-import { Action, Response, Connection } from './types'
+import { Action, Response, Connection } from './types.js'
 import debug = require('debug')
 
 const logInfo = debug('integreat:transporter:ftp')
@@ -71,7 +71,6 @@ export default async function send(
     return { status: 'badrequest', error }
   }
 
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
   const fileType = await client.exists(uri)
   switch (fileType) {
     case false:

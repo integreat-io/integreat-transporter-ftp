@@ -2,7 +2,7 @@ import test from 'ava'
 import sinon = require('sinon')
 import FtpClient = require('ssh2-sftp-client')
 
-import disconnect from './disconnect'
+import disconnect from './disconnect.js'
 
 // Tests
 
