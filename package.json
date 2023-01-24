@@ -34,13 +34,13 @@
   },
   "dependencies": {
     "@types/debug": "^4.1.7",
-    "@types/sinon": "^10.0.11",
-    "@types/ssh2-sftp-client": "^7.0.1",
+    "@types/sinon": "^10.0.13",
+    "@types/ssh2-sftp-client": "^7.1.1",
     "debug": "^4.3.4",
-    "sinon": "^12.0.1",
-    "ssh2-sftp-client": "^7.2.3"
+    "sinon": "^15.0.1",
+    "ssh2-sftp-client": "^9.0.4"
   },
   "devDependencies": {
-    "@integreat/ts-dev-setup": "^2.3.0"
+    "@integreat/ts-dev-setup": "^2.3.1"
   }
 }
