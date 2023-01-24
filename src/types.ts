@@ -84,7 +84,7 @@ export interface Action<P extends Payload = Payload, ResponseData = unknown> {
 
 export interface Connection extends Record<string, unknown> {
   status: string
-  client?: FtpClient
+  connect?: () => Promise<FtpClient>
 }
 
 export interface Transporter {

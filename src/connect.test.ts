@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import test from 'ava'
 import FtpClient = require('ssh2-sftp-client')
 import { SFTPWrapper } from 'ssh2'
@@ -6,7 +7,22 @@ import connect from './connect'
 
 // Tests
 
-test('should connect and return connection with client', async (t) => {
+test('should return connection with connect function', async (t) => {
+  const options = {
+    host: 'server.test',
+    port: 22,
+    path: '/folder',
+  }
+  const auth = null
+  const connection = null
+
+  const ret = await connect(FtpClient)(options, auth, connection)
+
+  t.is(ret.status, 'ok')
+  t.is(typeof ret.connect, 'function')
+})
+
+test('should return client when calling connect()', async (t) => {
   let calledOptions: FtpClient.ConnectOptions | null = null
   class MockClient extends FtpClient {
     async connect(options: FtpClient.ConnectOptions) {
@@ -28,9 +44,10 @@ test('should connect and return connection with client', async (t) => {
   }
 
   const ret = await connect(MockClient)(options, auth, connection)
+  const client = await ret.connect!()
 
   t.is(ret.status, 'ok')
-  t.true(ret.client instanceof MockClient)
+  t.true(client instanceof MockClient)
   t.deepEqual(calledOptions, expectedOptions)
 })
 
@@ -56,9 +73,10 @@ test('should treat baseUri as an alias of host', async (t) => {
   }
 
   const ret = await connect(MockClient)(options, auth, connection)
+  const client = await ret.connect!()
 
   t.is(ret.status, 'ok')
-  t.true(ret.client instanceof MockClient)
+  t.true(client instanceof MockClient)
   t.deepEqual(calledOptions, expectedOptions)
 })
 
@@ -85,9 +103,10 @@ test('should connect with auth', async (t) => {
   }
 
   const ret = await connect(MockClient)(options, auth, connection)
+  const client = await ret.connect!()
 
   t.is(ret.status, 'ok')
-  t.true(ret.client instanceof MockClient)
+  t.true(client instanceof MockClient)
   t.deepEqual(calledOptions, expectedOptions)
 })
 
@@ -113,9 +132,10 @@ test('should cast port to number', async (t) => {
   }
 
   const ret = await connect(MockClient)(options, auth, connection)
+  const client = await ret.connect!()
 
   t.is(ret.status, 'ok')
-  t.true(ret.client instanceof MockClient)
+  t.true(client instanceof MockClient)
   t.deepEqual(calledOptions, expectedOptions)
 })
 
@@ -164,13 +184,14 @@ test('should connect and return new connection when given connection has an erro
   }
 
   const ret = await connect(MockClient)(options, auth, connection)
+  const client = await ret.connect!()
 
   t.is(ret.status, 'ok')
-  t.true(ret.client instanceof MockClient)
+  t.true(client instanceof MockClient)
   t.deepEqual(calledOptions, expectedOptions)
 })
 
-test('should return error when client.connect() throws', async (t) => {
+test('should throw when client.connect() throws', async (t) => {
   class MockClient extends FtpClient {
     async connect(_options: FtpClient.ConnectOptions) {
       throw new Error('No more, please!')
@@ -187,10 +208,10 @@ test('should return error when client.connect() throws', async (t) => {
   const connection = null
 
   const ret = await connect(MockClient)(options, auth, connection)
+  const err = await t.throwsAsync(ret.connect!())
 
-  t.is(ret.status, 'error')
-  t.is(typeof ret.error, 'string')
-  t.falsy(ret.client)
+  t.true(err instanceof Error)
+  t.is(err!.message, 'Connection failed. Error: No more, please!')
 })
 
 test('should set status to badrequest when host or port are missing', async (t) => {

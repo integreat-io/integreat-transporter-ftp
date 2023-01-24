@@ -42,11 +42,13 @@ const dirData = [
 // Tests
 
 test('should fetch data from ftp server', async (t) => {
+  const endStub = sinon.stub().resolves(true)
   const existsStub = sinon.stub().resolves('-')
   const getStub = sinon
     .stub()
     .resolves(Buffer.from('{"id":"ent1","title":"Entry 1"}'))
-  const client = { exists: existsStub, get: getStub } as unknown as FtpClient
+  const connect = async () =>
+    ({ exists: existsStub, get: getStub, end: endStub } as unknown as FtpClient)
   const action = {
     type: 'GET',
     payload: { type: 'entry' },
@@ -58,7 +60,7 @@ test('should fetch data from ftp server', async (t) => {
       },
     },
   }
-  const connection = { status: 'ok', client }
+  const connection = { status: 'ok', connect }
   const expectedData = '{"id":"ent1","title":"Entry 1"}'
 
   const ret = await send(action, connection)
@@ -69,12 +71,18 @@ test('should fetch data from ftp server', async (t) => {
   t.is(getStub.callCount, 1)
   t.is(getStub.args[0][0], '/folder/entry1.json')
   t.deepEqual(ret.data, expectedData)
+  t.is(endStub.callCount, 1)
 })
 
 test('should fetch directory from ftp server', async (t) => {
   const existsStub = sinon.stub().resolves('d')
   const listStub = sinon.stub().resolves(dirData)
-  const client = { exists: existsStub, list: listStub } as unknown as FtpClient
+  const connect = async () =>
+    ({
+      exists: existsStub,
+      list: listStub,
+      end: async () => undefined,
+    } as unknown as FtpClient)
   const action = {
     type: 'GET',
     payload: { type: 'entry' },
@@ -86,7 +94,7 @@ test('should fetch directory from ftp server', async (t) => {
       },
     },
   }
-  const connection = { status: 'ok', client }
+  const connection = { status: 'ok', connect }
   const expectedData = [
     {
       id: '/folder/entry2.json',
@@ -122,10 +130,12 @@ test('should fetch directory from ftp server', async (t) => {
 })
 
 test('should zap double slashes from ids', async (t) => {
-  const client = {
-    exists: async () => 'd',
-    list: async () => dirData,
-  } as unknown as FtpClient
+  const connect = async () =>
+    ({
+      exists: async () => 'd',
+      list: async () => dirData,
+      end: async () => undefined,
+    } as unknown as FtpClient)
   const action = {
     type: 'GET',
     payload: { type: 'entry' },
@@ -137,7 +147,7 @@ test('should zap double slashes from ids', async (t) => {
       },
     },
   }
-  const connection = { status: 'ok', client }
+  const connection = { status: 'ok', connect }
   const expectedData = [
     {
       id: '/entry2.json',
@@ -170,7 +180,8 @@ test('should zap double slashes from ids', async (t) => {
 
 test('should return notfound when file does not exist', async (t) => {
   const existsStub = sinon.stub().resolves(false)
-  const client = { exists: existsStub } as unknown as FtpClient
+  const connect = async () =>
+    ({ exists: existsStub, end: async () => undefined } as unknown as FtpClient)
   const action = {
     type: 'GET',
     payload: { type: 'entry' },
@@ -182,7 +193,7 @@ test('should return notfound when file does not exist', async (t) => {
       },
     },
   }
-  const connection = { status: 'ok', client }
+  const connection = { status: 'ok', connect }
 
   const ret = await send(action, connection)
 
@@ -194,7 +205,8 @@ test('should return notfound when file does not exist', async (t) => {
 
 test('should return badresponse when file is of unknown type', async (t) => {
   const existsStub = sinon.stub().resolves('u') // File type u doesn't exist
-  const client = { exists: existsStub } as unknown as FtpClient
+  const connect = async () =>
+    ({ exists: existsStub, end: async () => undefined } as unknown as FtpClient)
   const action = {
     type: 'GET',
     payload: { type: 'entry' },
@@ -206,7 +218,7 @@ test('should return badresponse when file is of unknown type', async (t) => {
       },
     },
   }
-  const connection = { status: 'ok', client }
+  const connection = { status: 'ok', connect }
 
   const ret = await send(action, connection)
 
@@ -217,13 +229,13 @@ test('should return badresponse when file is of unknown type', async (t) => {
 })
 
 test('should return badrequest when no options', async (t) => {
-  const client = {} as unknown as FtpClient
+  const connect = async () => ({} as unknown as FtpClient)
   const action = {
     type: 'GET',
     payload: { type: 'entry' },
     meta: {},
   }
-  const connection = { status: 'ok', client }
+  const connection = { status: 'ok', connect }
 
   const ret = await send(action, connection)
 
@@ -232,7 +244,7 @@ test('should return badrequest when no options', async (t) => {
 })
 
 test('should return badrequest when no uri', async (t) => {
-  const client = {} as unknown as FtpClient
+  const connect = async () => ({} as unknown as FtpClient)
   const action = {
     type: 'GET',
     payload: { type: 'entry' },
@@ -244,7 +256,7 @@ test('should return badrequest when no uri', async (t) => {
       },
     },
   }
-  const connection = { status: 'ok', client }
+  const connection = { status: 'ok', connect }
 
   const ret = await send(action, connection)
 
@@ -253,7 +265,7 @@ test('should return badrequest when no uri', async (t) => {
 })
 
 test('should return badrequest when connection has error', async (t) => {
-  const client = {} as unknown as FtpClient
+  const connect = async () => ({} as unknown as FtpClient)
   const action = {
     type: 'GET',
     payload: { type: 'entry' },
@@ -265,7 +277,7 @@ test('should return badrequest when connection has error', async (t) => {
       },
     },
   }
-  const connection = { status: 'badrequest', error: 'No host or uri', client }
+  const connection = { status: 'badrequest', error: 'No host or uri', connect }
 
   const ret = await send(action, connection)
 
@@ -293,7 +305,7 @@ test('should return badrequest when no connection', async (t) => {
   t.is(typeof ret.error, 'string')
 })
 
-test('should return badrequest when no client', async (t) => {
+test('should return badrequest when no connect method', async (t) => {
   const action = {
     type: 'GET',
     payload: { type: 'entry' },
@@ -305,7 +317,28 @@ test('should return badrequest when no client', async (t) => {
       },
     },
   }
-  const connection = { status: 'ok', client: undefined }
+  const connection = { status: 'ok', connect: undefined }
+
+  const ret = await send(action, connection)
+
+  t.is(ret.status, 'badrequest', ret.error)
+  t.is(typeof ret.error, 'string')
+})
+
+test('should return error when connect method returns no client', async (t) => {
+  const connect = async () => undefined as unknown as FtpClient // Type hack
+  const action = {
+    type: 'GET',
+    payload: { type: 'entry' },
+    meta: {
+      options: {
+        host: 'server.test',
+        port: '22',
+        uri: '/folder/entry1.json',
+      },
+    },
+  }
+  const connection = { status: 'ok', connect }
 
   const ret = await send(action, connection)
 
@@ -314,7 +347,7 @@ test('should return badrequest when no client', async (t) => {
 })
 
 test('should return noaction for SET action', async (t) => {
-  const client = {} as unknown as FtpClient
+  const connect = async () => ({} as unknown as FtpClient)
   const action = {
     type: 'SET',
     payload: { type: 'entry', data: { id: 'ent1' } },
@@ -326,7 +359,7 @@ test('should return noaction for SET action', async (t) => {
       },
     },
   }
-  const connection = { status: 'ok', client }
+  const connection = { status: 'ok', connect }
 
   const ret = await send(action, connection)
 

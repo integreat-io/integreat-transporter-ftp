@@ -35,7 +35,6 @@ export default (Client = FtpClient) =>
       return connection
     }
 
-    const client = new Client()
     const clientOptions = prepareOptions(options, auth)
     if (!clientOptions.host || Number.isNaN(clientOptions.port)) {
       return {
@@ -44,10 +43,15 @@ export default (Client = FtpClient) =>
       }
     }
 
-    try {
-      await client.connect(clientOptions)
-      return { status: 'ok', client }
-    } catch (error) {
-      return { status: 'error', error: `Connection failed. ${error}` }
+    const connectFn = async () => {
+      const client = new Client()
+      try {
+        await client.connect(clientOptions)
+        return client
+      } catch (error) {
+        throw new Error(`Connection failed. ${error}`)
+      }
     }
+
+    return { status: 'ok', connect: connectFn }
   }
