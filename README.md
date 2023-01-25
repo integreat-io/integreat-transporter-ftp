@@ -47,6 +47,11 @@ Example source configuration:
 }
 ```
 
+_Note:_ The `connect()` method doesn't really connect, but instead returns a
+connection object with its own `connect()` method. The connection is made just
+in time and ended immidiately afterwards to keep SFTP connection from staying
+open.
+
 ### Running the tests
 
 The tests can be run with `npm test`.
