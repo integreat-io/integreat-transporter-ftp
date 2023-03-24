@@ -16,8 +16,6 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "test": "npm run lint && npm run build && c8 --reporter=text-summary ava --config ./ava-dist.config.cjs",
     "test:inspect": "node --inspect node_modules/ava/profile.js",
@@ -36,17 +34,17 @@
   },
   "homepage": "https://github.com/integreat-io/integreat-transporter-ftp#readme",
   "engines": {
-    "node": ">= 14.19"
+    "node": ">= 18"
   },
   "dependencies": {
     "@types/debug": "^4.1.7",
     "@types/sinon": "^10.0.13",
     "@types/ssh2-sftp-client": "^7.1.1",
     "debug": "^4.3.4",
-    "sinon": "^15.0.1",
+    "sinon": "^15.0.2",
     "ssh2-sftp-client": "^9.0.4"
   },
   "devDependencies": {
-    "@integreat/ts-dev-setup": "^4.0.0"
+    "@integreat/ts-dev-setup": "^4.0.1"
   }
 }
