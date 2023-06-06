@@ -1,4 +1,4 @@
-import FtpClient = require('ssh2-sftp-client')
+import FtpClient from 'ssh2-sftp-client'
 import { EndpointOptions, Connection } from './types.js'
 
 const removeKeyAndSecret = ({
@@ -46,7 +46,7 @@ export default (Client = FtpClient) =>
     const connectFn = async () => {
       const client = new Client()
       try {
-        await client.connect(clientOptions)
+        await client.connect(clientOptions as FtpClient.ConnectOptions) // Type hack to fix some outdated typing in FtpClient
         return client
       } catch (error) {
         throw new Error(`Connection failed. ${error}`)

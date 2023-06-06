@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import test from 'ava'
-import FtpClient = require('ssh2-sftp-client')
+import FtpClient from 'ssh2-sftp-client'
 import { SFTPWrapper } from 'ssh2'
 
 import connect from './connect.js'
