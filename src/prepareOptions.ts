@@ -1,4 +1,4 @@
-import url = require('url')
+import url from 'url'
 import { EndpointOptions, IncomingOptions } from './types.js'
 import { isObject } from './utils/is.js'
 

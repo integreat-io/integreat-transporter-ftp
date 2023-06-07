@@ -1,6 +1,6 @@
-import FtpClient = require('ssh2-sftp-client')
+import FtpClient from 'ssh2-sftp-client'
 import { Action, Response, Connection } from './types.js'
-import debug = require('debug')
+import debug from 'debug'
 
 const logInfo = debug('integreat:transporter:ftp')
 

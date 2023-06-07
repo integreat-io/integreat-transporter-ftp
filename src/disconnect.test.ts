@@ -1,5 +1,5 @@
 import test from 'ava'
-import FtpClient = require('ssh2-sftp-client')
+import FtpClient from 'ssh2-sftp-client'
 
 import disconnect from './disconnect.js'
 

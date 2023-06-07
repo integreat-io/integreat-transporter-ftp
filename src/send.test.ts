@@ -1,6 +1,6 @@
 import test from 'ava'
-import sinon = require('sinon')
-import FtpClient = require('ssh2-sftp-client')
+import sinon from 'sinon'
+import FtpClient from 'ssh2-sftp-client'
 
 import send from './send.js'
 
