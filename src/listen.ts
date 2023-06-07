@@ -5,8 +5,8 @@ import ssh2, {
   ServerConnectionListener,
 } from 'ssh2'
 import debugFn from 'debug'
-import type { Dispatch, Ident } from 'integreat'
-import type { Connection, Response } from './types.js'
+import type { Dispatch, Ident, Response } from 'integreat'
+import type { Connection } from './types.js'
 import { isObject, isNotEmpty } from './utils/is.js'
 
 export interface HandlerOptions {

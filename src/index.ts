@@ -1,8 +1,9 @@
-import send from './send.js'
 import prepareOptions from './prepareOptions.js'
 import connect from './connect.js'
+import send from './send.js'
+import listen from './listen.js'
 import disconnect from './disconnect.js'
-import { Transporter } from './types.js'
+import type { Transporter } from 'integreat'
 
 /**
  * HTTP Transporter for Integreat
@@ -15,6 +16,8 @@ const ftpTransporter: Transporter = {
   connect: connect(),
 
   send,
+
+  listen,
 
   disconnect,
 }

@@ -1,6 +1,7 @@
 import FtpClient from 'ssh2-sftp-client'
-import { Action, Response, Connection } from './types.js'
 import debug from 'debug'
+import type { Action, Response } from 'integreat'
+import type { Connection } from './types.js'
 
 const logInfo = debug('integreat:transporter:ftp')
 
@@ -71,7 +72,7 @@ export default async function send(
   }
 
   const { uri } = action.meta.options
-  if (!uri) {
+  if (typeof uri !== 'string') {
     const error = 'FTP transporter requires a uri'
     logInfo(error)
     return { status: 'badrequest', error }

@@ -9,6 +9,7 @@ test('should be a transporter', (t) => {
   t.is(typeof transporter.prepareOptions, 'function')
   t.is(typeof transporter.connect, 'function')
   t.is(typeof transporter.send, 'function')
+  t.is(typeof transporter.listen, 'function')
   t.is(typeof transporter.disconnect, 'function')
 })
 
@@ -19,7 +20,7 @@ test('should have authentication string', (t) => {
 test('connect should return connection object', async (t) => {
   const connection = { status: 'ok' }
 
-  const ret = await transporter.connect({}, {}, connection)
+  const ret = await transporter.connect({}, {}, connection, () => undefined)
 
   t.deepEqual(ret, connection)
 })
