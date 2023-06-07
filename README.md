@@ -4,13 +4,14 @@ Transporter that lets
 [Integreat](https://github.com/integreat-io/integreat) send and receive data
 over ftp/sftp.
 
-**Note:** Only receiving is implemented at this time.
+**Note:** We're only supporting fetching for now. You may get from a remote FTP
+server and provide a virtual SFTP server for others to fetch from.
 
 ## Getting started
 
 ### Prerequisits
 
-Requires node v12.9 and Integreat v0.8.
+Requires node v18 and Integreat v0.8.
 
 ### Installing and using
 
@@ -27,9 +28,9 @@ import Integreat from 'integreat'
 import ftp from 'integreat-transporter-ftp'
 import defs from './config'
 
-const resources = Integreat.mergeResources(integreat.resources(), {
+const resources = {
   transporters: { ftp },
-})
+}
 const great = Integreat.create(defs, resources)
 
 // ... and then dispatch actions as usual
@@ -51,6 +52,17 @@ _Note:_ The `connect()` method doesn't really connect, but instead returns a
 connection object with its own `connect()` method. The connection is made just
 in time and ended immidiately afterwards to keep SFTP connection from staying
 open.
+
+#### Running a virtual SFTP server
+
+Add a `incoming` object to the `options` object an rund `await great.listen()`
+to run a virtual SFTP server.
+
+The incoming options needs the following properties:
+
+- `host`: The host to listen to, e.g. `'localhost'`
+- `port`: The port to listen to, e.g. `22`
+- `privateKey`: The RSA Private Key to use for the SFTP server
 
 ### Running the tests
 

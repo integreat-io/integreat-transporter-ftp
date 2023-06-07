@@ -51,7 +51,7 @@ export default async function send(
     return { status: 'noaction', error }
   }
 
-  if (connection?.status !== 'ok' || !connection.connect) {
+  if (connection?.status !== 'ok' || typeof connection.connect !== 'function') {
     const error = 'FTP transporter requires a connection'
     logInfo(error)
     return { status: 'badrequest', error }

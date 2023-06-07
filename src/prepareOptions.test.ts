@@ -11,7 +11,6 @@ test('should return options with host, port, and path', (t) => {
     path: '/folder/entry1.json',
   }
   const expected = {
-    uri: undefined,
     host: 'server.test',
     port: '22',
     path: '/folder/entry1.json',
@@ -27,7 +26,6 @@ test('should extract host, port, and path from uri', (t) => {
     uri: 'sftp://server.test:22/folder/entry1.json',
   }
   const expected = {
-    uri: 'sftp://server.test:22/folder/entry1.json',
     host: 'server.test',
     port: '22',
     path: '/folder/entry1.json',
@@ -43,7 +41,6 @@ test('should extract root path as slash', (t) => {
     uri: 'sftp://server.test:22',
   }
   const expected = {
-    uri: 'sftp://server.test:22',
     host: 'server.test',
     port: '22',
     path: '/',
@@ -59,10 +56,33 @@ test('should handle invalid uri', (t) => {
     uri: 'no uri',
   }
   const expected = {
-    uri: 'no uri',
     host: undefined,
     port: undefined,
     path: undefined,
+  }
+
+  const ret = prepareOptions(options)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should include incoming options', (t) => {
+  const options = {
+    host: 'server.test',
+    port: '22',
+    path: '/folder/entry1.json',
+    incoming: {
+      host: 'localhost',
+      port: 22,
+      privateKey: 'k3y',
+      unknown: 'bad!',
+    }, // Not the right key format at all, but works for the test
+  }
+  const expected = {
+    host: 'server.test',
+    port: '22',
+    path: '/folder/entry1.json',
+    incoming: { host: 'localhost', port: 22, privateKey: 'k3y' },
   }
 
   const ret = prepareOptions(options)

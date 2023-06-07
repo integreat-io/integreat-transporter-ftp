@@ -1,5 +1,6 @@
 import url = require('url')
-import { EndpointOptions } from './types.js'
+import { EndpointOptions, IncomingOptions } from './types.js'
+import { isObject } from './utils/is.js'
 
 function extractFromUri(uri: string) {
   try {
@@ -10,16 +11,27 @@ function extractFromUri(uri: string) {
   }
 }
 
+const prepareIncoming = ({ host, port, privateKey }: IncomingOptions) => ({
+  host,
+  port,
+  privateKey,
+})
+
 export default function (options: EndpointOptions): EndpointOptions {
-  const { uri, host, port, path } = options
-  const nextOptions = { uri, host, port, path }
+  const { uri, host, port, path, incoming } = options
+  const nextOptions = {
+    host,
+    port,
+    path,
+    ...(isObject(incoming) ? { incoming: prepareIncoming(incoming) } : {}),
+  }
 
   if (typeof uri === 'string') {
     return {
       ...nextOptions,
       ...extractFromUri(uri),
     }
+  } else {
+    return nextOptions
   }
-
-  return nextOptions
 }

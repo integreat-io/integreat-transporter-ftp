@@ -38,8 +38,9 @@ export default (Client = FtpClient) =>
     const clientOptions = prepareOptions(options, auth)
     if (!clientOptions.host || Number.isNaN(clientOptions.port)) {
       return {
-        status: 'badrequest',
-        error: 'FTP needs a valid host and port to connect',
+        status: 'ok',
+        connect: undefined,
+        incoming: options.incoming,
       }
     }
 
@@ -53,5 +54,5 @@ export default (Client = FtpClient) =>
       }
     }
 
-    return { status: 'ok', connect: connectFn }
+    return { status: 'ok', connect: connectFn, incoming: options.incoming }
   }

@@ -5,7 +5,7 @@ import { SFTPWrapper } from 'ssh2'
 
 import connect from './connect.js'
 
-// Tests
+// Tests -- outgoing
 
 test('should return connection with connect function', async (t) => {
   const options = {
@@ -195,7 +195,6 @@ test('should throw when client.connect() throws', async (t) => {
   class MockClient extends FtpClient {
     async connect(_options: FtpClient.ConnectOptions) {
       throw new Error('No more, please!')
-      return {} as SFTPWrapper
     }
   }
 
@@ -214,25 +213,38 @@ test('should throw when client.connect() throws', async (t) => {
   t.is(err!.message, 'Connection failed. Error: No more, please!')
 })
 
-test('should set status to badrequest when host or port are missing', async (t) => {
-  let calledOptions: FtpClient.ConnectOptions | null = null
-  class MockClient extends FtpClient {
-    async connect(options: FtpClient.ConnectOptions) {
-      calledOptions = options
-      return {} as SFTPWrapper
-    }
+// Tests -- incoming
+
+test('should return connection for incoming', async (t) => {
+  const options = {
+    incoming: { host: 'localhost', port: 22, privateKey: 'pr1v4t3!' },
+  }
+  const auth = null
+  const connection = null
+  const expected = {
+    status: 'ok',
+    connect: undefined,
+    incoming: { host: 'localhost', port: 22, privateKey: 'pr1v4t3!' },
   }
 
+  const ret = await connect(FtpClient)(options, auth, connection)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return connection with connect function and incoming', async (t) => {
   const options = {
-    // Missing host and port
+    host: 'server.test',
+    port: 22,
     path: '/folder',
+    incoming: { host: 'localhost', port: 22, privateKey: 'pr1v4t3!' },
   }
   const auth = null
   const connection = null
 
-  const ret = await connect(MockClient)(options, auth, connection)
+  const ret = await connect(FtpClient)(options, auth, connection)
 
-  t.is(ret.status, 'badrequest')
-  t.is(ret.client, undefined)
-  t.is(calledOptions, null)
+  t.is(ret.status, 'ok')
+  t.is(typeof ret.connect, 'function')
+  t.deepEqual(ret.incoming, options.incoming)
 })

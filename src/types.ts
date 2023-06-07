@@ -1,4 +1,11 @@
-import FtpClient = require('ssh2-sftp-client')
+import FtpClient from 'ssh2-sftp-client'
+
+export interface IncomingOptions {
+  host: string
+  port: number
+  path?: string
+  privateKey?: string
+}
 
 export interface EndpointOptions extends Record<string, unknown> {
   uri?: string
@@ -6,6 +13,7 @@ export interface EndpointOptions extends Record<string, unknown> {
   baseUri?: string // Alias of host
   port?: number | string
   path?: string
+  incoming?: IncomingOptions
 }
 
 export interface Ident {
@@ -85,6 +93,7 @@ export interface Action<P extends Payload = Payload, ResponseData = unknown> {
 export interface Connection extends Record<string, unknown> {
   status: string
   connect?: () => Promise<FtpClient>
+  incoming?: IncomingOptions
 }
 
 export interface Transporter {
@@ -97,4 +106,12 @@ export interface Transporter {
   ) => Promise<Connection | null>
   send: (action: Action, connection: Connection | null) => Promise<Response>
   disconnect: (connection: Connection | null) => Promise<void>
+}
+
+export interface FileItem {
+  id: string | null
+  filename: string
+  content: string
+  createdAt: Date
+  updatedAt: Date
 }
