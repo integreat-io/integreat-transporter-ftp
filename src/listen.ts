@@ -1,12 +1,11 @@
 import ssh2, {
   FileEntry,
-  AuthContext,
   AcceptSftpConnection,
   RejectConnection,
   ServerConnectionListener,
 } from 'ssh2'
 import debugFn from 'debug'
-import type { Dispatch } from 'integreat'
+import type { Dispatch, Ident } from 'integreat'
 import type { Connection, Response } from './types.js'
 import { isObject, isNotEmpty } from './utils/is.js'
 
@@ -14,16 +13,22 @@ export interface HandlerOptions {
   dispatch: Dispatch
   host: string
   port: number
+  ident?: Ident
 }
 
 const debug = debugFn('integreat:transporter:ftp')
 
 const { STATUS_CODE } = ssh2.utils.sftp
 
-const createGetDirectory = (path: string, host: string, port: number) => ({
+const createGetDirectory = (
+  path: string,
+  host: string,
+  port: number,
+  ident?: Ident
+) => ({
   type: 'GET',
   payload: { path, host, port },
-  meta: {},
+  meta: { ident },
 })
 
 function splitPathAndId(path: string) {
@@ -31,10 +36,15 @@ function splitPathAndId(path: string) {
   return { path: path.slice(0, index), id: path.slice(index + 1) }
 }
 
-const createGetFile = (path: string, host: string, port: number) => ({
+const createGetFile = (
+  path: string,
+  host: string,
+  port: number,
+  ident?: Ident
+) => ({
   type: 'GET',
   payload: { ...splitPathAndId(path), host, port },
-  meta: {},
+  meta: { ident },
 })
 
 const prepareFtpOptions = (privateKey: string) => ({
@@ -91,40 +101,30 @@ function contentToFileInfo(item: unknown): FileEntry | undefined {
   return undefined
 }
 
-async function authenticate(ctx: AuthContext) {
-  const { method, username, password } = ctx
-  debugFn(`User ${username} attempting to authenticate with method= ${method}`)
-
-  if (ctx.method === 'password') {
-    // TODO: Validate username and password
-    ctx.accept()
-  } else {
-    ctx.reject(['password'])
-  }
-}
-
-const startSftpSession = ({ dispatch, host, port }: HandlerOptions) =>
+const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
   function startSftpSession(
     acceptSftp: AcceptSftpConnection,
     _rejectSftp: RejectConnection
   ) {
-    debugFn('Client SFTP session')
+    debug('Client SFTP session')
     const sftp = acceptSftp()
 
     const status = new Map<string, boolean>()
 
     sftp
       .on('OPEN', (reqID, path, _flags, _attrs) => {
-        debugFn(`SFTP OPEN ${path} (${reqID})`)
+        debug(`SFTP OPEN ${path} (${reqID})`)
         const handle = Buffer.from(path)
         sftp.handle(reqID, handle)
       })
       .on('READ', async (reqID, handle, offset, length) => {
         const path = handle.toString()
-        debugFn(`SFTP READ ${path} from ${offset} to ${length} (${reqID})`)
+        debug(`SFTP READ ${path} from ${offset} to ${length} (${reqID})`)
 
         if (offset === 0) {
-          const response = await dispatch(createGetFile(path, host, port))
+          const response = await dispatch(
+            createGetFile(path, host, port, ident)
+          )
           if (response.status === 'ok' && typeof response.data === 'string') {
             const file = Buffer.from(response.data)
             sftp.data(reqID, file)
@@ -147,24 +147,26 @@ const startSftpSession = ({ dispatch, host, port }: HandlerOptions) =>
         console.log('*** FSETSTAT')
       })
       .on('CLOSE', (reqID) => {
-        debugFn(`SFTP CLOSE (${reqID})`)
+        debug(`SFTP CLOSE (${reqID})`)
         sftp.status(reqID, STATUS_CODE.OK)
       })
       .on('OPENDIR', (reqID, path) => {
-        debugFn(`SFTP OPENDIR ${path} (${reqID})`)
+        debug(`SFTP OPENDIR ${path} (${reqID})`)
         const handle = Buffer.from(path)
         sftp.handle(reqID, handle)
       })
       .on('READDIR', async (reqID, handle) => {
         const path = handle.toString()
-        debugFn(`SFTP READDIR ${path} (${reqID})`)
+        debug(`SFTP READDIR ${path} (${reqID})`)
         const key = `READDIR|${path}`
         const doneReading = status.get(key)
         status.set(key, !doneReading)
 
         if (!doneReading) {
           // Dispatch to get directory content
-          const response = await dispatch(createGetDirectory(path, host, port))
+          const response = await dispatch(
+            createGetDirectory(path, host, port, ident)
+          )
           if (response.status === 'ok' && Array.isArray(response.data)) {
             sftp.name(
               reqID,
@@ -212,14 +214,36 @@ const startSftpSession = ({ dispatch, host, port }: HandlerOptions) =>
       })
   }
 
-const setupSftpServer = (options: HandlerOptions): ServerConnectionListener =>
-  function setupSftpServer(client, info) {
-    debugFn(`SFTP connection requested by ${info.ip}`)
+const setupSftpServer = (
+  options: HandlerOptions,
+  authenticate?: (options: Record<string, unknown>) => Promise<Ident>
+): ServerConnectionListener =>
+  function createSftpConnection(client, info) {
+    debug(`SFTP connection requested by ${info.ip}`)
+    let ident: Ident | undefined = undefined
 
     client
-      .on('authentication', authenticate)
+      .on('authentication', async function authenticateClient(ctx) {
+        debug(
+          `User ${ctx.username} attempting to authenticate with method= ${ctx.method}`
+        )
+
+        if (ctx.method === 'password') {
+          if (typeof authenticate !== 'function') {
+            ctx.accept()
+          } else {
+            ident = await authenticate({
+              key: ctx.username,
+              secret: ctx.password,
+            })
+            ctx.accept()
+          }
+        } else {
+          ctx.reject(['password'])
+        }
+      })
       .on('ready', function startListening() {
-        console.log('*** Client authenticated!')
+        debug('SFTP Client authenticated')
         client.on('session', (acceptSession, _rejectSession) => {
           const session = acceptSession()
           if (!session) {
@@ -227,19 +251,19 @@ const setupSftpServer = (options: HandlerOptions): ServerConnectionListener =>
             return
           }
 
-          debugFn('SFTP session started!')
-          session.on('sftp', startSftpSession(options))
+          debug('SFTP session started!')
+          session.on('sftp', startSftpSession({ ...options, ident }))
         })
       })
       .on('close', () => {
-        debugFn('SFTP connection closed')
+        debug('SFTP connection closed')
       })
       .on('rekey', () => {
-        debugFn('SFTP rekey')
+        debug('SFTP rekey')
       })
       .on('end', async () => {
         // Do some cleanup here
-        debugFn('SFTP client disconnected')
+        debug('SFTP client disconnected')
       })
       .on('error', (err) => {
         console.error(`*** SFTP client error occurred: ${err}`)
@@ -248,7 +272,8 @@ const setupSftpServer = (options: HandlerOptions): ServerConnectionListener =>
 
 export default async function listen(
   dispatch: Dispatch,
-  connection: Connection | null
+  connection: Connection | null,
+  authenticate?: (options: Record<string, unknown>) => Promise<Ident>
 ): Promise<Response> {
   if (!connection) {
     return {
@@ -275,13 +300,12 @@ export default async function listen(
   const options = prepareFtpOptions(privateKey)
 
   return new Promise((resolve, _reject) => {
-    new ssh2.Server(options, setupSftpServer({ dispatch, host, port })).listen(
-      port,
-      host,
-      function () {
-        debugFn('SFTP Listening on port ' + port)
-        resolve({ status: 'ok' })
-      }
-    )
+    new ssh2.Server(
+      options,
+      setupSftpServer({ dispatch, host, port }, authenticate)
+    ).listen(port, host, function () {
+      debug('SFTP Listening on port ' + port)
+      resolve({ status: 'ok' })
+    })
   })
 }

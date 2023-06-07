@@ -63,7 +63,7 @@ test('should respond to incoming ftp request for directory content', async (t) =
   const expectedAction = {
     type: 'GET',
     payload: { path: '/entries', host: 'localhost', port },
-    meta: {},
+    meta: { ident: undefined },
   }
   const expected = [
     {
@@ -115,7 +115,7 @@ test('should filter away data not in the expected format', async (t) => {
   const expectedAction = {
     type: 'GET',
     payload: { path: '/entries', host: 'localhost', port },
-    meta: {},
+    meta: { ident: undefined },
   }
 
   const ret = await listen(dispatch, connection)
@@ -200,7 +200,7 @@ test('should respond to incoming ftp request for file content', async (t) => {
       host: 'localhost',
       port,
     },
-    meta: {},
+    meta: { ident: undefined },
   }
   const expected = 'id;title\n1;Line 1\n2;Line 2'
 
@@ -263,6 +263,45 @@ test('should handle unknown error when fetching file', async (t) => {
   t.is(ret.status, 'ok', ret.error)
   t.is(dispatch.callCount, 1)
   t.is((err as Error).message, 'get: Failure /entries/file1.csv')
+})
+
+// Tests -- authentication
+
+test('should authenticate with provided method', async (t) => {
+  const port = 3040
+  t.timeout(5000)
+  const dispatch = sinon
+    .stub()
+    .resolves({ status: 'ok', data: files[0].content })
+  const authenticate = sinon.stub().resolves({ id: 'johnf' })
+  const connection = {
+    status: 'ok',
+    incoming: { host: 'localhost', port, privateKey },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path = '/entries/file1.csv'
+  const expectedAction = {
+    type: 'GET',
+    payload: {
+      path: '/entries',
+      id: 'file1.csv',
+      host: 'localhost',
+      port,
+    },
+    meta: { ident: { id: 'johnf' } },
+  }
+  const expected = 'id;title\n1;Line 1\n2;Line 2'
+
+  const ret = await listen(dispatch, connection, authenticate)
+  await t.notThrowsAsync(client.connect(options))
+  const response = await client.get(path)
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(dispatch.callCount, 1)
+  t.deepEqual(dispatch.args[0][0], expectedAction)
+  t.is(response.toString(), expected)
 })
 
 // Tests -- error handling
