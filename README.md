@@ -64,6 +64,35 @@ The incoming options needs the following properties:
 - `port`: The port to listen to, e.g. `22`
 - `privateKey`: The RSA Private Key to use for the SFTP server
 
+The transporter will handle a lot of different SFTP requests, and will on a few
+occations dispatch actions to get data and meta information to return to the FTP
+client.
+
+To get directory content (the list of "files"), this action will be dispatched:
+
+```javascript
+{
+  type: 'GET',
+  payload: { path: '/folder', host: 'localhost', port: 22 }
+}
+```
+
+To get content and meta information on one "file", this action will be
+dispatched:
+
+```javascript
+{
+  type: 'GET',
+  payload: { path: '/folder', id: 'latest.csv', host: 'localhost', port: 22 }
+}
+```
+
+Note that `path` is always set to the folder path, and the file name is used as
+an id.
+
+Integreat will also add the payload parameter `sourceService` with the id of the
+FTP service.
+
 ### Running the tests
 
 The tests can be run with `npm test`.
