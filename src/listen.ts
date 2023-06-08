@@ -36,6 +36,10 @@ function splitPathAndId(path: string) {
   return { path: path.slice(0, index), id: path.slice(index + 1) }
 }
 
+// This is a bit too simplistic, but works for now. A path with one level is
+// regarded as a directory, while anything above that is a file.
+const isDirectory = (path: string) => path.split('/').length <= 2 // Spliting returns two strings when there is one level
+
 const createGetFile = (
   path: string,
   host: string,
@@ -125,8 +129,12 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
           const response = await dispatch(
             createGetFile(path, host, port, ident)
           )
-          if (response.status === 'ok' && typeof response.data === 'string') {
-            const file = Buffer.from(response.data)
+          if (
+            response.status === 'ok' &&
+            isObject(response.data) &&
+            typeof response.data.content === 'string'
+          ) {
+            const file = Buffer.from(response.data.content)
             sftp.data(reqID, file)
           } else if (response.status === 'notfound') {
             sftp.status(reqID, STATUS_CODE.NO_SUCH_FILE)
@@ -185,8 +193,46 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
       .on('LSTAT', () => {
         console.log('*** LSTAT')
       })
-      .on('STAT', () => {
-        console.log('*** STAT')
+      .on('STAT', async (reqID, path) => {
+        console.log(`SFTP STAT ${path} (${reqID})`)
+        if (isDirectory(path)) {
+          const timestamp = Math.round(Date.now() / 1000) // Seconds
+          sftp.attrs(reqID, {
+            mode: 0o40444,
+            uid: 1000,
+            gid: 1000,
+            size: 0,
+            atime: timestamp,
+            mtime: timestamp,
+          })
+        } else {
+          const response = await dispatch(
+            createGetFile(path, host, port, ident)
+          )
+          if (response.status === 'ok' && isObject(response.data)) {
+            const size =
+              typeof response.data.content === 'string'
+                ? response.data.content.length
+                : 0
+            const timestamp = Math.round(
+              (response.data.updatedAt instanceof Date
+                ? response.data.updatedAt.getTime()
+                : Date.now()) / 1000
+            )
+            sftp.attrs(reqID, {
+              mode: 0o444,
+              uid: 1000,
+              gid: 1000,
+              size,
+              atime: timestamp,
+              mtime: timestamp,
+            })
+          } else if (response.status === 'notfound') {
+            sftp.status(reqID, STATUS_CODE.NO_SUCH_FILE)
+          } else {
+            sftp.status(reqID, STATUS_CODE.FAILURE)
+          }
+        }
       })
       .on('REMOVE', () => {
         console.log('*** REMOVE')
