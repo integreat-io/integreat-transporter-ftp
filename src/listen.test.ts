@@ -68,7 +68,7 @@ test('should respond to incoming ftp request for directory content', async (t) =
   const expected = [
     {
       type: '-',
-      name: 'file1.csv',
+      name: '/entries/file1.csv',
       size: 26,
       modifyTime: 1679231093000,
       accessTime: 1679231093000,
@@ -79,7 +79,7 @@ test('should respond to incoming ftp request for directory content', async (t) =
     },
     {
       type: '-',
-      name: 'file2.csv',
+      name: '/entries/file2.csv',
       size: 0,
       modifyTime: 1679246085000,
       accessTime: 1679246085000,

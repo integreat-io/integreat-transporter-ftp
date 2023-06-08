@@ -81,29 +81,30 @@ const formatDateTime = (time: Date) =>
 const generateLongname = (filename: string, size: number, time: Date) =>
   ['-r--r--r--  1 anon  anon ', size, formatDateTime(time), filename].join(' ')
 
-function contentToFileInfo(item: unknown): FileEntry | undefined {
-  if (isObject(item)) {
-    const filename = item.id
-    const size = typeof item.content === 'string' ? item.content.length : 0
-    const time = item.updatedAt
+const contentToFileInfo = (path: string) =>
+  function contentToFileInfo(item: unknown): FileEntry | undefined {
+    if (isObject(item)) {
+      const filename = item.id
+      const size = typeof item.content === 'string' ? item.content.length : 0
+      const time = item.updatedAt
 
-    if (typeof filename === 'string' && time instanceof Date) {
-      return {
-        filename,
-        longname: generateLongname(filename, size, time),
-        attrs: {
-          mode: 0o00444,
-          uid: 1000,
-          gid: 1000,
-          size,
-          atime: time.getTime() / 1000, // In seconds
-          mtime: time.getTime() / 1000, // In seconds
-        },
+      if (typeof filename === 'string' && time instanceof Date) {
+        return {
+          filename: `${path}/${filename}`,
+          longname: generateLongname(filename, size, time),
+          attrs: {
+            mode: 0o00444,
+            uid: 1000,
+            gid: 1000,
+            size,
+            atime: time.getTime() / 1000, // In seconds
+            mtime: time.getTime() / 1000, // In seconds
+          },
+        }
       }
     }
+    return undefined
   }
-  return undefined
-}
 
 const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
   function startSftpSession(
@@ -178,7 +179,7 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
           if (response.status === 'ok' && Array.isArray(response.data)) {
             sftp.name(
               reqID,
-              response.data.map(contentToFileInfo).filter(isNotEmpty)
+              response.data.map(contentToFileInfo(path)).filter(isNotEmpty)
             )
           } else if (response.status === 'notfound') {
             sftp.status(reqID, STATUS_CODE.NO_SUCH_FILE)
