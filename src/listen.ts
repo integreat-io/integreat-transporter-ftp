@@ -194,8 +194,9 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
       .on('RMDIR', () => {
         console.log('*** RMDIR')
       })
-      .on('REALPATH', () => {
-        console.log('*** REALPATH')
+      .on('REALPATH', (reqID, path) => {
+        debug(`SFTP REALPATH ${path} (${reqID})`)
+        sftp.name(reqID, [{ filename: path } as FileEntry]) // Only filename is required, but TS don't know that
       })
       .on('READLINK', () => {
         console.log('*** READLINK')

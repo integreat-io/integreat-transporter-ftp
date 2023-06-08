@@ -176,6 +176,28 @@ test('should handle errors from dispatch when fetching directory content', async
   t.is((err as Error).message, 'list: Failure /entries')
 })
 
+test('should respond to incoming REALPATH request for directory', async (t) => {
+  const port = 3024
+  t.timeout(5000)
+  const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
+  const connection = {
+    status: 'ok',
+    incoming: { host: 'localhost', port, privateKey },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path = '/entries'
+  const expected = '/entries'
+
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  const response = await client.realPath(path)
+
+  t.is(ret.status, 'ok', ret.error)
+  t.deepEqual(response, expected)
+})
+
 // Tests -- file
 
 test('should respond to incoming ftp request for file content', async (t) => {
@@ -263,6 +285,28 @@ test('should handle unknown error when fetching file', async (t) => {
   t.is(ret.status, 'ok', ret.error)
   t.is(dispatch.callCount, 1)
   t.is((err as Error).message, 'get: Failure /entries/file1.csv')
+})
+
+test('should respond to incoming REALPATH request for file', async (t) => {
+  const port = 3033
+  t.timeout(5000)
+  const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
+  const connection = {
+    status: 'ok',
+    incoming: { host: 'localhost', port, privateKey },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path = '/entries/file.csv'
+  const expected = '/entries/file.csv'
+
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  const response = await client.realPath(path)
+
+  t.is(ret.status, 'ok', ret.error)
+  t.deepEqual(response, expected)
 })
 
 // Tests -- authentication
