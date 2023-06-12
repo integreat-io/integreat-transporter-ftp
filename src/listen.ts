@@ -83,29 +83,29 @@ const formatDateTime = (time: Date) =>
 const generateLongname = (filename: string, size: number, time: Date) =>
   ['-r--r--r--  1 anon  anon ', size, formatDateTime(time), filename].join(' ')
 
-  function contentToFileInfo(item: unknown): FileEntry | undefined {
-    if (isObject(item)) {
-      const filename = item.id
-      const size = typeof item.content === 'string' ? item.content.length : 0
-      const time = item.updatedAt
+function contentToFileInfo(item: unknown): FileEntry | undefined {
+  if (isObject(item)) {
+    const filename = item.id
+    const size = typeof item.content === 'string' ? item.content.length : 0
+    const time = item.updatedAt
 
-      if (typeof filename === 'string' && time instanceof Date) {
-        return {
+    if (typeof filename === 'string' && time instanceof Date) {
+      return {
         filename,
-          longname: generateLongname(filename, size, time),
-          attrs: {
-            mode: 0o00444,
-            uid: 1000,
-            gid: 1000,
-            size,
-            atime: getSecondsFromMs(time.getTime()),
-            mtime: getSecondsFromMs(time.getTime()),
-          },
-        }
+        longname: generateLongname(filename, size, time),
+        attrs: {
+          mode: 0o00444,
+          uid: 1000,
+          gid: 1000,
+          size,
+          atime: getSecondsFromMs(time.getTime()),
+          mtime: getSecondsFromMs(time.getTime()),
+        },
       }
     }
-    return undefined
   }
+  return undefined
+}
 
 const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
   function startSftpSession(
@@ -118,6 +118,9 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
     const status = new Map<string, boolean>()
 
     sftp
+      .on('ready', () => {
+        debug('SFTP READY')
+      })
       .on('OPEN', (reqID, path, _flags, _attrs) => {
         debug(`SFTP OPEN ${path} (${reqID})`)
         const handle = Buffer.from(path)
@@ -262,6 +265,9 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
       .on('SYMLINK', () => {
         console.log('*** SYMLINK')
       })
+      .on('error', (err: unknown) => {
+        console.error(`*** SFTP error occurred: ${err}`)
+      })
   }
 
 const setupSftpServer = (
@@ -294,16 +300,20 @@ const setupSftpServer = (
       })
       .on('ready', function startListening() {
         debug('SFTP Client authenticated')
-        client.on('session', (acceptSession, _rejectSession) => {
-          const session = acceptSession()
-          if (!session) {
-            client.end()
-            return
-          }
+        client
+          .on('session', (acceptSession, _rejectSession) => {
+            const session = acceptSession()
+            if (!session) {
+              client.end()
+              return
+            }
 
-          debug('SFTP session started!')
-          session.on('sftp', startSftpSession({ ...options, ident }))
-        })
+            debug('SFTP session started!')
+            session.on('sftp', startSftpSession({ ...options, ident }))
+          })
+          .on('error', (err) => {
+            console.error(`*** SFTP client error occurred: ${err}`)
+          })
       })
       .on('close', () => {
         debug('SFTP connection closed')
@@ -316,7 +326,7 @@ const setupSftpServer = (
         debug('SFTP client disconnected')
       })
       .on('error', (err) => {
-        console.error(`*** SFTP client error occurred: ${err}`)
+        console.error(`*** SFTP connection error occurred: ${err}`)
       })
   }
 
