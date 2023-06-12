@@ -100,8 +100,60 @@ test('should respond to incoming ftp request for directory content', async (t) =
   t.deepEqual(response, expected)
 })
 
-test('should filter away data not in the expected format', async (t) => {
+test('should respond to incoming ftp request for directory content with path ending in slash', async (t) => {
   const port = 3021
+  t.timeout(5000)
+  const dispatch = sinon.stub().resolves({ status: 'ok', data: files })
+  const connection = {
+    status: 'ok',
+    incoming: { host: 'localhost', port, privateKey },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path = '/'
+  const expectedAction = {
+    type: 'GET',
+    payload: { path: '/', host: 'localhost', port },
+    meta: { ident: undefined },
+  }
+  const expected = [
+    {
+      type: '-',
+      name: '/file1.csv',
+      size: 26,
+      modifyTime: 1679231093000,
+      accessTime: 1679231093000,
+      rights: { user: 'r', group: 'r', other: 'r' },
+      owner: 1000,
+      group: 1000,
+      longname: '-r--r--r--  1 anon  anon  26 Mar 19 14:04 file1.csv',
+    },
+    {
+      type: '-',
+      name: '/file2.csv',
+      size: 0,
+      modifyTime: 1679246085000,
+      accessTime: 1679246085000,
+      rights: { user: 'r', group: 'r', other: 'r' },
+      owner: 1000,
+      group: 1000,
+      longname: '-r--r--r--  1 anon  anon  0 Mar 19 18:14 file2.csv',
+    },
+  ]
+
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  const response = await client.list(path)
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(dispatch.callCount, 1)
+  t.deepEqual(dispatch.args[0][0], expectedAction)
+  t.deepEqual(response, expected)
+})
+
+test('should filter away data not in the expected format', async (t) => {
+  const port = 3022
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: [...files, {}] })
   const connection = {
@@ -129,7 +181,7 @@ test('should filter away data not in the expected format', async (t) => {
 })
 
 test('should handle unknown directory', async (t) => {
-  const port = 3022
+  const port = 3023
   t.timeout(5000)
   const dispatch = sinon
     .stub()
@@ -153,7 +205,7 @@ test('should handle unknown directory', async (t) => {
 })
 
 test('should handle errors from dispatch when fetching directory content', async (t) => {
-  const port = 3023
+  const port = 3024
   t.timeout(5000)
   const dispatch = sinon
     .stub()
@@ -177,7 +229,7 @@ test('should handle errors from dispatch when fetching directory content', async
 })
 
 test('should respond to incoming REALPATH request for directory', async (t) => {
-  const port = 3024
+  const port = 3025
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
   const connection = {
@@ -199,7 +251,7 @@ test('should respond to incoming REALPATH request for directory', async (t) => {
 })
 
 test('should respond to incoming STAT request for directory', async (t) => {
-  const port = 3025
+  const port = 3026
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
   const connection = {

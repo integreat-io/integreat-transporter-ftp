@@ -31,9 +31,13 @@ const createGetDirectory = (
   meta: { ident },
 })
 
-function splitPathAndId(path: string) {
+function splitPathAndFilename(path: string) {
   const index = path.lastIndexOf('/')
   return { path: path.slice(0, index), id: path.slice(index + 1) }
+}
+
+function joinPathAndFilename(path: string, filename: string) {
+  return path.endsWith('/') ? `${path}${filename}` : `${path}/${filename}`
 }
 
 // This is a bit too simplistic, but works for now. A path with one level is
@@ -47,7 +51,7 @@ const createGetFile = (
   ident?: Ident
 ) => ({
   type: 'GET',
-  payload: { ...splitPathAndId(path), host, port },
+  payload: { ...splitPathAndFilename(path), host, port },
   meta: { ident },
 })
 
@@ -90,7 +94,7 @@ const contentToFileInfo = (path: string) =>
 
       if (typeof filename === 'string' && time instanceof Date) {
         return {
-          filename: `${path}/${filename}`,
+          filename: joinPathAndFilename(path, filename),
           longname: generateLongname(filename, size, time),
           attrs: {
             mode: 0o00444,
@@ -195,7 +199,7 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
         console.log('*** LSTAT')
       })
       .on('STAT', async (reqID, path) => {
-        console.log(`SFTP STAT ${path} (${reqID})`)
+        debug(`SFTP STAT ${path} (${reqID})`)
         if (isDirectory(path)) {
           const timestamp = Math.round(Date.now() / 1000) // Seconds
           sftp.attrs(reqID, {
