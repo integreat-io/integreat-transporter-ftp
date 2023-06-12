@@ -437,10 +437,84 @@ test('should respond to incoming STAT request for file', async (t) => {
   t.deepEqual(response, expected)
 })
 
+// Tests -- several actions
+
+test('should fetch directory content and then download file', async (t) => {
+  const port = 3040
+  t.timeout(5000)
+  const dispatch = sinon
+    .stub()
+    .onCall(0)
+    .resolves({ status: 'ok', data: files })
+    .onCall(1)
+    .resolves({ status: 'ok', data: files[0] })
+  const connection = {
+    status: 'ok',
+    incoming: { host: 'localhost', port, privateKey },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path0 = '/entries'
+  const path1 = '/entries/file1.csv'
+  const expectedAction0 = {
+    type: 'GET',
+    payload: { path: '/entries', host: 'localhost', port },
+    meta: { ident: undefined },
+  }
+  const expectedAction1 = {
+    type: 'GET',
+    payload: {
+      path: '/entries',
+      id: 'file1.csv',
+      host: 'localhost',
+      port,
+    },
+    meta: { ident: undefined },
+  }
+  const expected0 = [
+    {
+      type: '-',
+      name: 'file1.csv',
+      size: 26,
+      modifyTime: 1679231094000,
+      accessTime: 1679231094000,
+      rights: { user: 'r', group: 'r', other: 'r' },
+      owner: 1000,
+      group: 1000,
+      longname: '-r--r--r--  1 anon  anon  26 Mar 19 14:04 file1.csv',
+    },
+    {
+      type: '-',
+      name: 'file2.csv',
+      size: 0,
+      modifyTime: 1679246085000,
+      accessTime: 1679246085000,
+      rights: { user: 'r', group: 'r', other: 'r' },
+      owner: 1000,
+      group: 1000,
+      longname: '-r--r--r--  1 anon  anon  0 Mar 19 18:14 file2.csv',
+    },
+  ]
+  const expected1 = 'id;title\n1;Line 1\n2;Line 2'
+
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  const response0 = await client.list(path0)
+  const response1 = await client.get(path1)
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(dispatch.callCount, 2)
+  t.deepEqual(dispatch.args[0][0], expectedAction0)
+  t.deepEqual(dispatch.args[1][0], expectedAction1)
+  t.deepEqual(response0, expected0)
+  t.deepEqual(response1.toString(), expected1)
+})
+
 // Tests -- authentication
 
 test('should authenticate with provided method', async (t) => {
-  const port = 3040
+  const port = 3050
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: files[0] })
   const authenticate = sinon.stub().resolves({ id: 'johnf' })
