@@ -272,38 +272,8 @@ test('should respond to incoming REALPATH request for current directory', async 
   t.deepEqual(response, expected)
 })
 
-test('should respond to incoming STAT request for directory', async (t) => {
-  const port = 3027
-  t.timeout(5000)
-  const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
-  const connection = {
-    status: 'ok',
-    incoming: { host: 'localhost', port, privateKey },
-  }
-  const options = createFtpOptions(port)
-  const client = new FtpClient()
-  client.on('error', console.error)
-  const path = '/entries'
-
-  const before = Math.round(Date.now() / 1000) * 1000
-  const ret = await listen(dispatch, connection)
-  await t.notThrowsAsync(client.connect(options))
-  const response = await client.stat(path)
-  const after = Math.round(Date.now() / 1000) * 1000
-
-  t.is(ret.status, 'ok', ret.error)
-  t.is(response.mode, 0o40444)
-  t.is(response.uid, 1000)
-  t.is(response.gid, 1000)
-  t.is(response.size, 0)
-  t.true(response.isDirectory)
-  t.true(response.accessTime >= before)
-  t.true(response.accessTime <= after)
-  t.is(response.accessTime, response.modifyTime)
-})
-
 test('should respond to incoming STAT request for root directory', async (t) => {
-  const port = 3028
+  const port = 3027
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
   const connection = {
@@ -519,7 +489,7 @@ test('should respond to incoming REALPATH request for filename in current folder
   t.deepEqual(response, expected)
 })
 
-test('should respond to incoming STAT request for file', async (t) => {
+test('should respond to incoming STAT request for file on root', async (t) => {
   const port = 3037
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: files[0] })
@@ -530,11 +500,11 @@ test('should respond to incoming STAT request for file', async (t) => {
   const options = createFtpOptions(port)
   const client = new FtpClient()
   client.on('error', console.error)
-  const path = '/entries/file1.csv'
+  const path = '/file1.csv'
   const expectedAction = {
     type: 'GET',
     payload: {
-      path: '/entries',
+      path: '/',
       id: 'file1.csv',
       host: 'localhost',
       port,

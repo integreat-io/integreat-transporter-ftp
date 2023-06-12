@@ -50,9 +50,9 @@ const getRealPath = (path: string) =>
 
 const getSecondsFromMs = (ms: number) => Math.round(ms / 1000)
 
-// This is a bit too simplistic, but works for now. A path with one level is
-// regarded as a directory, while anything above that is a file.
-const isDirectory = (path: string) => path.split('/').length <= 2 // Spliting returns two strings when there is one level
+// As we only support root paths, the only directory we'll recognize has the
+// path '/'
+const isDirectory = (path: string) => path === '/'
 
 const createGetFile = (
   path: string,
