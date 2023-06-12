@@ -55,7 +55,11 @@ open.
 
 #### Running a virtual SFTP server
 
-Add a `incoming` object to the `options` object an rund `await great.listen()`
+**Note:** The virtual server does only support a root directory with a list of
+files. In the future, we plan to offer options to configure a folder structure
+that maps to different schemas and action params.
+
+Add an `incoming` object to the `options` object an rund `await great.listen()`
 to run a virtual SFTP server.
 
 The incoming options needs the following properties:
@@ -73,7 +77,7 @@ To get directory content (the list of "files"), this action will be dispatched:
 ```javascript
 {
   type: 'GET',
-  payload: { path: '/folder', host: 'localhost', port: 22 }
+  payload: { path: '/', host: 'localhost', port: 22 }
 }
 ```
 
@@ -83,12 +87,11 @@ dispatched:
 ```javascript
 {
   type: 'GET',
-  payload: { path: '/folder', id: 'latest.csv', host: 'localhost', port: 22 }
+  payload: { path: '/', id: 'latest.csv', host: 'localhost', port: 22 }
 }
 ```
 
-Note that `path` is always set to the folder path, and the file name is used as
-an id.
+Note that `path` is always set to the path, and the file name is used as an id.
 
 Integreat will also add the payload parameter `sourceService` with the id of the
 FTP service.
