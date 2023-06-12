@@ -36,10 +36,6 @@ function splitPathAndFilename(path: string) {
   return { path: path.slice(0, index), id: path.slice(index + 1) }
 }
 
-function joinPathAndFilename(path: string, filename: string) {
-  return path.endsWith('/') ? `${path}${filename}` : `${path}/${filename}`
-}
-
 const getSecondsFromMs = (ms: number) => Math.round(ms / 1000)
 
 // This is a bit too simplistic, but works for now. A path with one level is
@@ -87,7 +83,6 @@ const formatDateTime = (time: Date) =>
 const generateLongname = (filename: string, size: number, time: Date) =>
   ['-r--r--r--  1 anon  anon ', size, formatDateTime(time), filename].join(' ')
 
-const contentToFileInfo = (path: string) =>
   function contentToFileInfo(item: unknown): FileEntry | undefined {
     if (isObject(item)) {
       const filename = item.id
@@ -96,7 +91,7 @@ const contentToFileInfo = (path: string) =>
 
       if (typeof filename === 'string' && time instanceof Date) {
         return {
-          filename: joinPathAndFilename(path, filename),
+        filename,
           longname: generateLongname(filename, size, time),
           attrs: {
             mode: 0o00444,
@@ -185,7 +180,7 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
           if (response.status === 'ok' && Array.isArray(response.data)) {
             sftp.name(
               reqID,
-              response.data.map(contentToFileInfo(path)).filter(isNotEmpty)
+              response.data.map(contentToFileInfo).filter(isNotEmpty)
             )
           } else if (response.status === 'notfound') {
             sftp.status(reqID, STATUS_CODE.NO_SUCH_FILE)
