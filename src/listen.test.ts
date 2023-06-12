@@ -35,14 +35,14 @@ const files = [
   {
     id: 'file1.csv',
     content: 'id;title\n1;Line 1\n2;Line 2',
-    createdAt: new Date('2023-03-18T00:43:14Z'),
-    updatedAt: new Date('2023-03-19T13:04:53Z'),
+    createdAt: new Date('2023-03-18T00:43:14.183Z'),
+    updatedAt: new Date('2023-03-19T13:04:53.992Z'),
   },
   {
     id: 'file2.csv',
     content: '',
-    createdAt: new Date('2023-03-18T07:14:44Z'),
-    updatedAt: new Date('2023-03-19T17:14:45Z'),
+    createdAt: new Date('2023-03-18T07:14:44.009Z'),
+    updatedAt: new Date('2023-03-19T17:14:45.123Z'),
   },
 ]
 
@@ -70,8 +70,8 @@ test('should respond to incoming ftp request for directory content', async (t) =
       type: '-',
       name: '/entries/file1.csv',
       size: 26,
-      modifyTime: 1679231093000,
-      accessTime: 1679231093000,
+      modifyTime: 1679231094000,
+      accessTime: 1679231094000,
       rights: { user: 'r', group: 'r', other: 'r' },
       owner: 1000,
       group: 1000,
@@ -122,8 +122,8 @@ test('should respond to incoming ftp request for directory content with path end
       type: '-',
       name: '/file1.csv',
       size: 26,
-      modifyTime: 1679231093000,
-      accessTime: 1679231093000,
+      modifyTime: 1679231094000,
+      accessTime: 1679231094000,
       rights: { user: 'r', group: 'r', other: 'r' },
       owner: 1000,
       group: 1000,
@@ -423,8 +423,8 @@ test('should respond to incoming STAT request for file', async (t) => {
     isFile: false,
     isSocket: false,
     isSymbolicLink: false,
-    modifyTime: 1679231093000,
-    accessTime: 1679231093000,
+    modifyTime: 1679231094000,
+    accessTime: 1679231094000,
   }
 
   const ret = await listen(dispatch, connection)

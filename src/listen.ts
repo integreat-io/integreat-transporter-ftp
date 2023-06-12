@@ -40,6 +40,8 @@ function joinPathAndFilename(path: string, filename: string) {
   return path.endsWith('/') ? `${path}${filename}` : `${path}/${filename}`
 }
 
+const getSecondsFromMs = (ms: number) => Math.round(ms / 1000)
+
 // This is a bit too simplistic, but works for now. A path with one level is
 // regarded as a directory, while anything above that is a file.
 const isDirectory = (path: string) => path.split('/').length <= 2 // Spliting returns two strings when there is one level
@@ -101,8 +103,8 @@ const contentToFileInfo = (path: string) =>
             uid: 1000,
             gid: 1000,
             size,
-            atime: time.getTime() / 1000, // In seconds
-            mtime: time.getTime() / 1000, // In seconds
+            atime: getSecondsFromMs(time.getTime()),
+            mtime: getSecondsFromMs(time.getTime()),
           },
         }
       }
@@ -201,14 +203,14 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
       .on('STAT', async (reqID, path) => {
         debug(`SFTP STAT ${path} (${reqID})`)
         if (isDirectory(path)) {
-          const timestamp = Math.round(Date.now() / 1000) // Seconds
+          const timestampSeconds = getSecondsFromMs(Date.now())
           sftp.attrs(reqID, {
             mode: 0o40444,
             uid: 1000,
             gid: 1000,
             size: 0,
-            atime: timestamp,
-            mtime: timestamp,
+            atime: timestampSeconds,
+            mtime: timestampSeconds,
           })
         } else {
           const response = await dispatch(
@@ -219,11 +221,12 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
               typeof response.data.content === 'string'
                 ? response.data.content.length
                 : 0
-            const timestamp = Math.round(
-              (response.data.updatedAt instanceof Date
+            const timestamp = getSecondsFromMs(
+              response.data.updatedAt instanceof Date
                 ? response.data.updatedAt.getTime()
-                : Date.now()) / 1000
+                : Date.now()
             )
+
             sftp.attrs(reqID, {
               mode: 0o444,
               uid: 1000,
