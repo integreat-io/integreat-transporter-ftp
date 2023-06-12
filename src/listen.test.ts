@@ -250,7 +250,7 @@ test('should respond to incoming REALPATH request for directory', async (t) => {
   t.deepEqual(response, expected)
 })
 
-test('should respond to incoming STAT request for directory', async (t) => {
+test('should respond to incoming REALPATH request for current directory', async (t) => {
   const port = 3026
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
@@ -261,7 +261,59 @@ test('should respond to incoming STAT request for directory', async (t) => {
   const options = createFtpOptions(port)
   const client = new FtpClient()
   client.on('error', console.error)
+  const path = '.'
+  const expected = '/'
+
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  const response = await client.realPath(path)
+
+  t.is(ret.status, 'ok', ret.error)
+  t.deepEqual(response, expected)
+})
+
+test('should respond to incoming STAT request for directory', async (t) => {
+  const port = 3027
+  t.timeout(5000)
+  const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
+  const connection = {
+    status: 'ok',
+    incoming: { host: 'localhost', port, privateKey },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
   const path = '/entries'
+
+  const before = Math.round(Date.now() / 1000) * 1000
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  const response = await client.stat(path)
+  const after = Math.round(Date.now() / 1000) * 1000
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(response.mode, 0o40444)
+  t.is(response.uid, 1000)
+  t.is(response.gid, 1000)
+  t.is(response.size, 0)
+  t.true(response.isDirectory)
+  t.true(response.accessTime >= before)
+  t.true(response.accessTime <= after)
+  t.is(response.accessTime, response.modifyTime)
+})
+
+test('should respond to incoming STAT request for root directory', async (t) => {
+  const port = 3028
+  t.timeout(5000)
+  const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
+  const connection = {
+    status: 'ok',
+    incoming: { host: 'localhost', port, privateKey },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path = '/'
 
   const before = Math.round(Date.now() / 1000) * 1000
   const ret = await listen(dispatch, connection)
@@ -367,7 +419,7 @@ test('should handle unknown error when fetching file', async (t) => {
   t.is((err as Error).message, 'get: Failure /entries/file1.csv')
 })
 
-test('should respond to incoming REALPATH request for file', async (t) => {
+test('should respond to incoming REALPATH request for file with full path', async (t) => {
   const port = 3033
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
@@ -389,8 +441,52 @@ test('should respond to incoming REALPATH request for file', async (t) => {
   t.deepEqual(response, expected)
 })
 
-test('should respond to incoming STAT request for file', async (t) => {
+test('should respond to incoming REALPATH request for filename only', async (t) => {
   const port = 3034
+  t.timeout(5000)
+  const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
+  const connection = {
+    status: 'ok',
+    incoming: { host: 'localhost', port, privateKey },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path = 'file.csv'
+  const expected = '/file.csv'
+
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  const response = await client.realPath(path)
+
+  t.is(ret.status, 'ok', ret.error)
+  t.deepEqual(response, expected)
+})
+
+test('should respond to incoming REALPATH request for filename in current folder', async (t) => {
+  const port = 3035
+  t.timeout(5000)
+  const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
+  const connection = {
+    status: 'ok',
+    incoming: { host: 'localhost', port, privateKey },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path = './file.csv'
+  const expected = '/file.csv'
+
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  const response = await client.realPath(path)
+
+  t.is(ret.status, 'ok', ret.error)
+  t.deepEqual(response, expected)
+})
+
+test('should respond to incoming STAT request for file', async (t) => {
+  const port = 3036
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: files[0] })
   const connection = {

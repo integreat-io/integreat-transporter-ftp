@@ -36,6 +36,15 @@ function splitPathAndFilename(path: string) {
   return { path: path.slice(0, index), id: path.slice(index + 1) }
 }
 
+const getRealPath = (path: string) =>
+  path === '.'
+    ? '/'
+    : path.startsWith('./')
+    ? path.slice(1)
+    : path.startsWith('/')
+    ? path
+    : `/${path}`
+
 const getSecondsFromMs = (ms: number) => Math.round(ms / 1000)
 
 // This is a bit too simplistic, but works for now. A path with one level is
@@ -248,7 +257,7 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
       })
       .on('REALPATH', (reqID, path) => {
         debug(`SFTP REALPATH ${path} (${reqID})`)
-        sftp.name(reqID, [{ filename: path } as FileEntry]) // Only filename is required, but TS don't know that
+        sftp.name(reqID, [{ filename: getRealPath(path) } as FileEntry]) // Only filename is required, but TS don't know that
       })
       .on('READLINK', () => {
         console.log('*** READLINK')
