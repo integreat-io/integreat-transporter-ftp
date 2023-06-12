@@ -33,7 +33,10 @@ const createGetDirectory = (
 
 function splitPathAndFilename(path: string) {
   const index = path.lastIndexOf('/')
-  return { path: path.slice(0, index), id: path.slice(index + 1) }
+  return {
+    path: index === 0 ? '/' : path.slice(0, index),
+    id: path.slice(index + 1),
+  }
 }
 
 const getRealPath = (path: string) =>

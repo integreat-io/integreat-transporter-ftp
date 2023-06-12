@@ -368,8 +368,42 @@ test('should respond to incoming ftp request for file content', async (t) => {
   t.is(response.toString(), expected)
 })
 
-test('should handle unknown file', async (t) => {
+test('should respond to incoming ftp request for file content on root', async (t) => {
   const port = 3031
+  t.timeout(5000)
+  const dispatch = sinon.stub().resolves({ status: 'ok', data: files[0] })
+  const connection = {
+    status: 'ok',
+    incoming: { host: 'localhost', port, privateKey },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path = '/file1.csv'
+  const expectedAction = {
+    type: 'GET',
+    payload: {
+      path: '/',
+      id: 'file1.csv',
+      host: 'localhost',
+      port,
+    },
+    meta: { ident: undefined },
+  }
+  const expected = 'id;title\n1;Line 1\n2;Line 2'
+
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  const response = await client.get(path)
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(dispatch.callCount, 1)
+  t.deepEqual(dispatch.args[0][0], expectedAction)
+  t.is(response.toString(), expected)
+})
+
+test('should handle unknown file', async (t) => {
+  const port = 3032
   t.timeout(5000)
   const dispatch = sinon
     .stub()
@@ -396,7 +430,7 @@ test('should handle unknown file', async (t) => {
 })
 
 test('should handle unknown error when fetching file', async (t) => {
-  const port = 3032
+  const port = 3033
   t.timeout(5000)
   const dispatch = sinon
     .stub()
@@ -420,7 +454,7 @@ test('should handle unknown error when fetching file', async (t) => {
 })
 
 test('should respond to incoming REALPATH request for file with full path', async (t) => {
-  const port = 3033
+  const port = 3034
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
   const connection = {
@@ -442,7 +476,7 @@ test('should respond to incoming REALPATH request for file with full path', asyn
 })
 
 test('should respond to incoming REALPATH request for filename only', async (t) => {
-  const port = 3034
+  const port = 3035
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
   const connection = {
@@ -464,7 +498,7 @@ test('should respond to incoming REALPATH request for filename only', async (t) 
 })
 
 test('should respond to incoming REALPATH request for filename in current folder', async (t) => {
-  const port = 3035
+  const port = 3036
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
   const connection = {
@@ -486,7 +520,7 @@ test('should respond to incoming REALPATH request for filename in current folder
 })
 
 test('should respond to incoming STAT request for file', async (t) => {
-  const port = 3036
+  const port = 3037
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: files[0] })
   const connection = {
