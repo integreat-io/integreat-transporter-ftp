@@ -20,17 +20,6 @@ const debug = debugFn('integreat:transporter:ftp')
 
 const { STATUS_CODE } = ssh2.utils.sftp
 
-const createGetDirectory = (
-  path: string,
-  host: string,
-  port: number,
-  ident?: Ident
-) => ({
-  type: 'GET',
-  payload: { path, host, port },
-  meta: { ident },
-})
-
 function splitPathAndFilename(path: string) {
   const index = path.lastIndexOf('/')
   return {
@@ -54,6 +43,17 @@ const getSecondsFromMs = (ms: number) => Math.round(ms / 1000)
 // path '/'
 const isDirectory = (path: string) => path === '/'
 
+const createGetDirectory = (
+  path: string,
+  host: string,
+  port: number,
+  ident?: Ident
+) => ({
+  type: 'GET',
+  payload: { path, host, port },
+  meta: { ident },
+})
+
 const createGetFile = (
   path: string,
   host: string,
@@ -61,6 +61,17 @@ const createGetFile = (
   ident?: Ident
 ) => ({
   type: 'GET',
+  payload: { ...splitPathAndFilename(path), host, port },
+  meta: { ident },
+})
+
+const createDeleteFile = (
+  path: string,
+  host: string,
+  port: number,
+  ident?: Ident
+) => ({
+  type: 'DELETE',
   payload: { ...splitPathAndFilename(path), host, port },
   meta: { ident },
 })
@@ -267,8 +278,19 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
         // deal with links, it's the same as LSTAT for us
         await handleStat(reqID, path, sftp, dispatch, host, port, ident)
       })
-      .on('REMOVE', () => {
-        console.log('*** REMOVE')
+      .on('REMOVE', async (reqID, path) => {
+        debug(`SFTP REMOVE ${path} (${reqID})`)
+
+        const response = await dispatch(
+          createDeleteFile(path, host, port, ident)
+        )
+        if (response.status === 'ok') {
+          sftp.status(reqID, STATUS_CODE.OK)
+        } else if (response.status === 'notfound') {
+          sftp.status(reqID, STATUS_CODE.NO_SUCH_FILE)
+        } else {
+          sftp.status(reqID, STATUS_CODE.FAILURE)
+        }
       })
       .on('RMDIR', () => {
         console.log('*** RMDIR')

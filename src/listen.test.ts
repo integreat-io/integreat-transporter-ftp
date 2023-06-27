@@ -306,7 +306,7 @@ test('should respond to incoming STAT request for root directory', async (t) => 
   t.is(response.accessTime, response.modifyTime)
 })
 
-// Tests -- file
+// Tests -- file read
 
 test('should respond to incoming ftp request for file content', async (t) => {
   const port = 3030
@@ -589,10 +589,92 @@ test('should respond to incoming LSTAT request for file on root', async (t) => {
   t.deepEqual(response, expected)
 })
 
+// Tests -- file remove
+
+test('should dispatch DELETE action on file remove', async (t) => {
+  const port = 3040
+  t.timeout(5000)
+  const dispatch = sinon.stub().resolves({ status: 'ok' })
+  const connection = {
+    status: 'ok',
+    incoming: { host: 'localhost', port, privateKey },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path = '/file1.csv'
+  const expectedAction = {
+    type: 'DELETE',
+    payload: {
+      path: '/',
+      id: 'file1.csv',
+      host: 'localhost',
+      port,
+    },
+    meta: { ident: undefined },
+  }
+
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  await client.delete(path)
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(dispatch.callCount, 1)
+  t.deepEqual(dispatch.args[0][0], expectedAction)
+})
+
+test('should throw when trying to remove an unknown file', async (t) => {
+  const port = 3041
+  t.timeout(5000)
+  const dispatch = sinon
+    .stub()
+    .resolves({ status: 'notfound', error: 'The file is missing' })
+  const connection = {
+    status: 'ok',
+    incoming: { host: 'localhost', port, privateKey },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path = '/file1.csv'
+
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  const err = await t.throwsAsync(client.delete(path))
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(dispatch.callCount, 1)
+  t.is((err as Error).message, 'delete: No such file or directory /file1.csv')
+})
+
+test('should throw when removing file fails', async (t) => {
+  const port = 3042
+  t.timeout(5000)
+  const dispatch = sinon
+    .stub()
+    .resolves({ status: 'error', error: 'Will not delete' })
+  const connection = {
+    status: 'ok',
+    incoming: { host: 'localhost', port, privateKey },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path = '/file1.csv'
+
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  const err = await t.throwsAsync(client.delete(path))
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(dispatch.callCount, 1)
+  t.is((err as Error).message, 'delete: Failure /file1.csv')
+})
+
 // Tests -- several actions
 
 test('should fetch directory content and then download file', async (t) => {
-  const port = 3040
+  const port = 3050
   t.timeout(5000)
   const dispatch = sinon
     .stub()
@@ -666,7 +748,7 @@ test('should fetch directory content and then download file', async (t) => {
 // Tests -- authentication
 
 test('should authenticate with provided method', async (t) => {
-  const port = 3050
+  const port = 3060
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: files[0] })
   const authenticate = sinon.stub().resolves({ id: 'johnf' })
