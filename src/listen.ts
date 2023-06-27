@@ -29,7 +29,7 @@ function splitPathAndFilename(path: string) {
 }
 
 const getRealPath = (path: string) =>
-  path === '.'
+  path === '.' || path === '/.'
     ? '/'
     : path.startsWith('./')
     ? path.slice(1)
@@ -194,7 +194,7 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
       })
       .on('OPEN', (reqID, path, _flags, _attrs) => {
         debug(`SFTP OPEN ${path} (${reqID})`)
-        const handle = Buffer.from(path)
+        const handle = Buffer.from(getRealPath(path))
         sftp.handle(reqID, handle)
       })
       .on('READ', async (reqID, handle, offset, length) => {
@@ -236,7 +236,7 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
       })
       .on('OPENDIR', (reqID, path) => {
         debug(`SFTP OPENDIR ${path} (${reqID})`)
-        const handle = Buffer.from(path)
+        const handle = Buffer.from(getRealPath(path))
         sftp.handle(reqID, handle)
       })
       .on('READDIR', async (reqID, handle) => {
@@ -270,19 +270,35 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
         debug(`SFTP LSTAT ${path} (${reqID})`)
         // LSTAT expects stat on the link (not the file it's linking to), but as
         // we don't deal with links, it's the same as STAT for us
-        await handleStat(reqID, path, sftp, dispatch, host, port, ident)
+        await handleStat(
+          reqID,
+          getRealPath(path),
+          sftp,
+          dispatch,
+          host,
+          port,
+          ident
+        )
       })
       .on('STAT', async (reqID, path) => {
         debug(`SFTP STAT ${path} (${reqID})`)
         // STAT expects stat on the file a link is linking to, but as we don't
         // deal with links, it's the same as LSTAT for us
-        await handleStat(reqID, path, sftp, dispatch, host, port, ident)
+        await handleStat(
+          reqID,
+          getRealPath(path),
+          sftp,
+          dispatch,
+          host,
+          port,
+          ident
+        )
       })
       .on('REMOVE', async (reqID, path) => {
         debug(`SFTP REMOVE ${path} (${reqID})`)
 
         const response = await dispatch(
-          createDeleteFile(path, host, port, ident)
+          createDeleteFile(getRealPath(path), host, port, ident)
         )
         if (response.status === 'ok') {
           sftp.status(reqID, STATUS_CODE.OK)
