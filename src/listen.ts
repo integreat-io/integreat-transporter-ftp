@@ -243,8 +243,20 @@ const startSftpSession = ({
       .on('WRITE', () => {
         console.log('*** WRITE')
       })
-      .on('FSTAT', () => {
-        console.log('*** FSTAT')
+      .on('FSTAT', async (reqID, handle) => {
+        // TODO: Write test for FSTAT! Not possible at the moment because it's not supported in the FTP client we're using in the tests
+        const path = handle.toString()
+        debug(`SFTP FSTAT ${path} (${reqID})`)
+        await handleStat(
+          reqID,
+          getRealPath(path),
+          sftp,
+          dispatch,
+          host,
+          port,
+          ident,
+          access
+        )
       })
       .on('FSETSTAT', () => {
         console.log('*** FSETSTAT')
