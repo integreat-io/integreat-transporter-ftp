@@ -6,7 +6,7 @@ import ssh2, {
 } from 'ssh2'
 import debugFn from 'debug'
 import type { Dispatch, Ident, Response } from 'integreat'
-import type { Connection } from './types.js'
+import type { Connection, IncomingAccess } from './types.js'
 import { isObject, isNotEmpty } from './utils/is.js'
 
 export interface HandlerOptions {
@@ -14,6 +14,7 @@ export interface HandlerOptions {
   host: string
   port: number
   ident?: Ident
+  access?: IncomingAccess
 }
 
 const debug = debugFn('integreat:transporter:ftp')
@@ -130,6 +131,17 @@ function contentToFileInfo(item: unknown): FileEntry | undefined {
   return undefined
 }
 
+const numberIf = (pred: boolean | undefined, num: number) => (pred ? num : 0)
+
+function generateMode(access: IncomingAccess, isDir = false) {
+  const permission =
+    numberIf(access.GET, 4) +
+    numberIf(access.SET, 2) +
+    numberIf(access.DELETE, 1)
+  const dirPermissions = isDir ? 0o40000 : 0
+  return dirPermissions + 0o100 * permission + 0o10 * permission + permission
+}
+
 async function handleStat(
   reqID: number,
   path: string,
@@ -137,12 +149,13 @@ async function handleStat(
   dispatch: Dispatch,
   host: string,
   port: number,
-  ident: Ident | undefined
+  ident: Ident | undefined,
+  access: IncomingAccess
 ) {
   if (isDirectory(path)) {
     const timestampSeconds = getSecondsFromMs(Date.now())
     sftp.attrs(reqID, {
-      mode: 0o40444,
+      mode: generateMode(access, true),
       uid: 1000,
       gid: 1000,
       size: 0,
@@ -178,7 +191,13 @@ async function handleStat(
   }
 }
 
-const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
+const startSftpSession = ({
+  dispatch,
+  host,
+  port,
+  ident,
+  access = { GET: true },
+}: HandlerOptions) =>
   function startSftpSession(
     acceptSftp: AcceptSftpConnection,
     _rejectSftp: RejectConnection
@@ -277,7 +296,8 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
           dispatch,
           host,
           port,
-          ident
+          ident,
+          access
         )
       })
       .on('STAT', async (reqID, path) => {
@@ -291,7 +311,8 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
           dispatch,
           host,
           port,
-          ident
+          ident,
+          access
         )
       })
       .on('REMOVE', async (reqID, path) => {
@@ -408,7 +429,7 @@ export default async function listen(
   }
 
   debug('Start listening to ftp ...')
-  const { host, port, privateKey } = connection.incoming || {}
+  const { host, port, privateKey, access } = connection.incoming || {}
 
   if (
     typeof host !== 'string' ||
@@ -427,7 +448,7 @@ export default async function listen(
   return new Promise((resolve, _reject) => {
     new ssh2.Server(
       options,
-      setupSftpServer({ dispatch, host, port }, authenticate)
+      setupSftpServer({ dispatch, host, port, access }, authenticate)
     ).listen(port, host, function () {
       debug('SFTP Listening on port ' + port)
       resolve({ status: 'ok' })

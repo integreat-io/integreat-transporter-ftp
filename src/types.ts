@@ -1,11 +1,18 @@
 import FtpClient from 'ssh2-sftp-client'
 import type { Connection as BaseConnection } from 'integreat'
 
+export interface IncomingAccess {
+  GET?: boolean
+  SET?: boolean
+  DELETE?: boolean
+}
+
 export interface IncomingOptions {
   host: string
   port: number
   path?: string
   privateKey?: string
+  access?: IncomingAccess
 }
 
 export interface EndpointOptions extends Record<string, unknown> {

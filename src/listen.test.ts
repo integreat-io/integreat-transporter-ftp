@@ -410,6 +410,41 @@ test('should respond to incoming STAT request for root directory', async (t) => 
   t.is(response.accessTime, response.modifyTime)
 })
 
+test('should respond to incoming STAT request for root directory with full permissions', async (t) => {
+  const port = 3070
+  t.timeout(5000)
+  const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
+  const connection = {
+    status: 'ok',
+    incoming: {
+      host: 'localhost',
+      port,
+      privateKey,
+      access: { GET: true, SET: true, DELETE: true },
+    },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path = '/'
+
+  const before = Math.round(Date.now() / 1000) * 1000
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  const response = await client.stat(path)
+  const after = Math.round(Date.now() / 1000) * 1000
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(response.mode, 0o40777)
+  t.is(response.uid, 1000)
+  t.is(response.gid, 1000)
+  t.is(response.size, 0)
+  t.true(response.isDirectory)
+  t.true(response.accessTime >= before)
+  t.true(response.accessTime <= after)
+  t.is(response.accessTime, response.modifyTime)
+})
+
 // Tests -- file read
 
 test('should respond to incoming ftp request for file content', async (t) => {
