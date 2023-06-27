@@ -157,7 +157,7 @@ test('should respond to incoming ftp request for directory content with path end
 })
 
 test('should respond to incoming ftp request for directory with dot path', async (t) => {
-  const port = 3028
+  const port = 3022
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: files })
   const connection = {
@@ -209,7 +209,7 @@ test('should respond to incoming ftp request for directory with dot path', async
 })
 
 test('should respond to incoming ftp request for directory with slash and dot path', async (t) => {
-  const port = 3029
+  const port = 3023
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: files })
   const connection = {
@@ -261,7 +261,7 @@ test('should respond to incoming ftp request for directory with slash and dot pa
 })
 
 test('should filter away data not in the expected format', async (t) => {
-  const port = 3022
+  const port = 3024
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: [...files, {}] })
   const connection = {
@@ -289,7 +289,7 @@ test('should filter away data not in the expected format', async (t) => {
 })
 
 test('should handle unknown directory', async (t) => {
-  const port = 3023
+  const port = 3025
   t.timeout(5000)
   const dispatch = sinon
     .stub()
@@ -313,7 +313,7 @@ test('should handle unknown directory', async (t) => {
 })
 
 test('should handle errors from dispatch when fetching directory content', async (t) => {
-  const port = 3024
+  const port = 3026
   t.timeout(5000)
   const dispatch = sinon
     .stub()
@@ -337,7 +337,7 @@ test('should handle errors from dispatch when fetching directory content', async
 })
 
 test('should respond to incoming REALPATH request for directory', async (t) => {
-  const port = 3025
+  const port = 3027
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
   const connection = {
@@ -359,7 +359,7 @@ test('should respond to incoming REALPATH request for directory', async (t) => {
 })
 
 test('should respond to incoming REALPATH request for current directory', async (t) => {
-  const port = 3026
+  const port = 3028
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
   const connection = {
@@ -378,71 +378,6 @@ test('should respond to incoming REALPATH request for current directory', async 
 
   t.is(ret.status, 'ok', ret.error)
   t.deepEqual(response, expected)
-})
-
-test('should respond to incoming STAT request for root directory', async (t) => {
-  const port = 3027
-  t.timeout(5000)
-  const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
-  const connection = {
-    status: 'ok',
-    incoming: { host: 'localhost', port, privateKey },
-  }
-  const options = createFtpOptions(port)
-  const client = new FtpClient()
-  client.on('error', console.error)
-  const path = '/'
-
-  const before = Math.round(Date.now() / 1000) * 1000
-  const ret = await listen(dispatch, connection)
-  await t.notThrowsAsync(client.connect(options))
-  const response = await client.stat(path)
-  const after = Math.round(Date.now() / 1000) * 1000
-
-  t.is(ret.status, 'ok', ret.error)
-  t.is(response.mode, 0o40444)
-  t.is(response.uid, 1000)
-  t.is(response.gid, 1000)
-  t.is(response.size, 0)
-  t.true(response.isDirectory)
-  t.true(response.accessTime >= before)
-  t.true(response.accessTime <= after)
-  t.is(response.accessTime, response.modifyTime)
-})
-
-test('should respond to incoming STAT request for root directory with full permissions', async (t) => {
-  const port = 3070
-  t.timeout(5000)
-  const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
-  const connection = {
-    status: 'ok',
-    incoming: {
-      host: 'localhost',
-      port,
-      privateKey,
-      access: { GET: true, SET: true, DELETE: true },
-    },
-  }
-  const options = createFtpOptions(port)
-  const client = new FtpClient()
-  client.on('error', console.error)
-  const path = '/'
-
-  const before = Math.round(Date.now() / 1000) * 1000
-  const ret = await listen(dispatch, connection)
-  await t.notThrowsAsync(client.connect(options))
-  const response = await client.stat(path)
-  const after = Math.round(Date.now() / 1000) * 1000
-
-  t.is(ret.status, 'ok', ret.error)
-  t.is(response.mode, 0o40777)
-  t.is(response.uid, 1000)
-  t.is(response.gid, 1000)
-  t.is(response.size, 0)
-  t.true(response.isDirectory)
-  t.true(response.accessTime >= before)
-  t.true(response.accessTime <= after)
-  t.is(response.accessTime, response.modifyTime)
 })
 
 // Tests -- file read
@@ -632,8 +567,75 @@ test('should respond to incoming REALPATH request for filename in current folder
   t.deepEqual(response, expected)
 })
 
+// Tests -- stat
+
+test('should respond to incoming STAT request for root directory', async (t) => {
+  const port = 3040
+  t.timeout(5000)
+  const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
+  const connection = {
+    status: 'ok',
+    incoming: { host: 'localhost', port, privateKey },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path = '/'
+
+  const before = Math.round(Date.now() / 1000) * 1000
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  const response = await client.stat(path)
+  const after = Math.round(Date.now() / 1000) * 1000
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(response.mode, 0o40444)
+  t.is(response.uid, 1000)
+  t.is(response.gid, 1000)
+  t.is(response.size, 0)
+  t.true(response.isDirectory)
+  t.true(response.accessTime >= before)
+  t.true(response.accessTime <= after)
+  t.is(response.accessTime, response.modifyTime)
+})
+
+test('should respond to incoming STAT request for root directory with full permissions', async (t) => {
+  const port = 3041
+  t.timeout(5000)
+  const dispatch = sinon.stub().resolves({ status: 'ok', data: null })
+  const connection = {
+    status: 'ok',
+    incoming: {
+      host: 'localhost',
+      port,
+      privateKey,
+      access: { GET: true, SET: true, DELETE: true },
+    },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path = '/'
+
+  const before = Math.round(Date.now() / 1000) * 1000
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  const response = await client.stat(path)
+  const after = Math.round(Date.now() / 1000) * 1000
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(response.mode, 0o40777)
+  t.is(response.uid, 1000)
+  t.is(response.gid, 1000)
+  t.is(response.size, 0)
+  t.true(response.isDirectory)
+  t.true(response.accessTime >= before)
+  t.true(response.accessTime <= after)
+  t.is(response.accessTime, response.modifyTime)
+})
+
 test('should respond to incoming STAT request for file on root', async (t) => {
-  const port = 3037
+  const port = 3042
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: files[0] })
   const connection = {
@@ -681,7 +683,7 @@ test('should respond to incoming STAT request for file on root', async (t) => {
 })
 
 test('should respond to incoming LSTAT request for file on root', async (t) => {
-  const port = 3038
+  const port = 3043
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: files[0] })
   const connection = {
@@ -731,7 +733,7 @@ test('should respond to incoming LSTAT request for file on root', async (t) => {
 // Tests -- file remove
 
 test('should dispatch DELETE action on file remove', async (t) => {
-  const port = 3040
+  const port = 3050
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok' })
   const connection = {
@@ -763,7 +765,7 @@ test('should dispatch DELETE action on file remove', async (t) => {
 })
 
 test('should throw when trying to remove an unknown file', async (t) => {
-  const port = 3041
+  const port = 3051
   t.timeout(5000)
   const dispatch = sinon
     .stub()
@@ -787,7 +789,7 @@ test('should throw when trying to remove an unknown file', async (t) => {
 })
 
 test('should throw when removing file fails', async (t) => {
-  const port = 3042
+  const port = 3052
   t.timeout(5000)
   const dispatch = sinon
     .stub()
@@ -813,7 +815,7 @@ test('should throw when removing file fails', async (t) => {
 // Tests -- several actions
 
 test('should fetch directory content and then download file', async (t) => {
-  const port = 3050
+  const port = 3060
   t.timeout(5000)
   const dispatch = sinon
     .stub()
@@ -887,7 +889,7 @@ test('should fetch directory content and then download file', async (t) => {
 // Tests -- authentication
 
 test('should authenticate with provided method', async (t) => {
-  const port = 3060
+  const port = 3070
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: files[0] })
   const authenticate = sinon.stub().resolves({ id: 'johnf' })
