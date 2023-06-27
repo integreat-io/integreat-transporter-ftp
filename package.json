@@ -1,6 +1,6 @@
 {
   "name": "integreat-transporter-ftp",
-  "version": "0.2.13",
+  "version": "0.2.14",
   "description": "(S)FTP transporter for Integreat",
   "keywords": [
     "integreat",
@@ -22,6 +22,7 @@
     "test:watch": "npm run dev",
     "dev": "ava --watch",
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "coverage": "c8 report",
     "lint": "eslint --ext .ts src"
   },
