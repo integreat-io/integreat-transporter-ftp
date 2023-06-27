@@ -241,8 +241,10 @@ const startSftpSession = ({
           sftp.status(reqID, STATUS_CODE.EOF)
         }
       })
-      .on('WRITE', () => {
-        console.log('*** WRITE')
+      .on('WRITE', (reqID, handle) => {
+        const path = handle.toString()
+        debug(`SFTP WRITE ${path} (${reqID})`)
+        sftp.status(reqID, STATUS_CODE.OP_UNSUPPORTED)
       })
       .on('FSTAT', async (reqID, handle) => {
         // TODO: Write test for FSTAT! Not possible at the moment because it's not supported in the FTP client we're using in the tests
@@ -344,28 +346,33 @@ const startSftpSession = ({
           sftp.status(reqID, STATUS_CODE.FAILURE)
         }
       })
-      .on('RMDIR', () => {
-        console.log('*** RMDIR')
+      .on('RMDIR', (reqID, path) => {
+        debug(`SFTP RMDIR ${path} (${reqID})`)
+        sftp.status(reqID, STATUS_CODE.OP_UNSUPPORTED)
       })
       .on('REALPATH', (reqID, path) => {
         debug(`SFTP REALPATH ${path} (${reqID})`)
         sftp.name(reqID, [{ filename: getRealPath(path) } as FileEntry]) // Only filename is required, but TS don't know that
       })
-      .on('READLINK', () => {
-        console.log('*** READLINK')
+      .on('READLINK', (reqID, path) => {
+        debug(`SFTP READLINK ${path} (${reqID})`)
+        sftp.status(reqID, STATUS_CODE.OP_UNSUPPORTED)
       })
       .on('SETSTAT', (reqID, path, attrs) => {
         debug(`SFTP SETSTAT ${path} (${reqID}) ${util.inspect(attrs)}`)
         sftp.status(reqID, STATUS_CODE.OK)
       })
-      .on('MKDIR', () => {
-        console.log('*** MKDIR')
+      .on('MKDIR', (reqID, path) => {
+        debug(`SFTP MKDIR ${path} (${reqID})`)
+        sftp.status(reqID, STATUS_CODE.OP_UNSUPPORTED)
       })
-      .on('RENAME', () => {
-        console.log('*** RENAME')
+      .on('RENAME', (reqID, oldPath, newPath) => {
+        debug(`SFTP RENAME ${oldPath} to ${newPath} (${reqID})`)
+        sftp.status(reqID, STATUS_CODE.OP_UNSUPPORTED)
       })
-      .on('SYMLINK', () => {
-        console.log('*** SYMLINK')
+      .on('SYMLINK', (reqID, targetPath, linkPath) => {
+        debug(`SFTP SYMLINK from ${linkPath} to ${targetPath} (${reqID})`)
+        sftp.status(reqID, STATUS_CODE.OP_UNSUPPORTED)
       })
       .on('end', () => {
         debug('SFTP END')
