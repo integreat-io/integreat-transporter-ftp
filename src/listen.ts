@@ -119,6 +119,54 @@ function contentToFileInfo(item: unknown): FileEntry | undefined {
   return undefined
 }
 
+async function handleStat(
+  reqID: number,
+  path: string,
+  sftp: ssh2.SFTPWrapper,
+  dispatch: Dispatch,
+  host: string,
+  port: number,
+  ident: Ident | undefined
+) {
+  if (isDirectory(path)) {
+    const timestampSeconds = getSecondsFromMs(Date.now())
+    sftp.attrs(reqID, {
+      mode: 0o40444,
+      uid: 1000,
+      gid: 1000,
+      size: 0,
+      atime: timestampSeconds,
+      mtime: timestampSeconds,
+    })
+  } else {
+    const response = await dispatch(createGetFile(path, host, port, ident))
+    if (response.status === 'ok' && isObject(response.data)) {
+      const size =
+        typeof response.data.content === 'string'
+          ? response.data.content.length
+          : 0
+      const timestamp = getSecondsFromMs(
+        response.data.updatedAt instanceof Date
+          ? response.data.updatedAt.getTime()
+          : Date.now()
+      )
+
+      sftp.attrs(reqID, {
+        mode: 0o444,
+        uid: 1000,
+        gid: 1000,
+        size,
+        atime: timestamp,
+        mtime: timestamp,
+      })
+    } else if (response.status === 'notfound') {
+      sftp.status(reqID, STATUS_CODE.NO_SUCH_FILE)
+    } else {
+      sftp.status(reqID, STATUS_CODE.FAILURE)
+    }
+  }
+}
+
 const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
   function startSftpSession(
     acceptSftp: AcceptSftpConnection,
@@ -207,50 +255,17 @@ const startSftpSession = ({ dispatch, host, port, ident }: HandlerOptions) =>
           sftp.status(reqID, STATUS_CODE.EOF)
         }
       })
-      .on('LSTAT', () => {
-        console.log('*** LSTAT')
+      .on('LSTAT', async (reqID, path) => {
+        debug(`SFTP LSTAT ${path} (${reqID})`)
+        // LSTAT expects stat on the link (not the file it's linking to), but as
+        // we don't deal with links, it's the same as STAT for us
+        await handleStat(reqID, path, sftp, dispatch, host, port, ident)
       })
       .on('STAT', async (reqID, path) => {
         debug(`SFTP STAT ${path} (${reqID})`)
-        if (isDirectory(path)) {
-          const timestampSeconds = getSecondsFromMs(Date.now())
-          sftp.attrs(reqID, {
-            mode: 0o40444,
-            uid: 1000,
-            gid: 1000,
-            size: 0,
-            atime: timestampSeconds,
-            mtime: timestampSeconds,
-          })
-        } else {
-          const response = await dispatch(
-            createGetFile(path, host, port, ident)
-          )
-          if (response.status === 'ok' && isObject(response.data)) {
-            const size =
-              typeof response.data.content === 'string'
-                ? response.data.content.length
-                : 0
-            const timestamp = getSecondsFromMs(
-              response.data.updatedAt instanceof Date
-                ? response.data.updatedAt.getTime()
-                : Date.now()
-            )
-
-            sftp.attrs(reqID, {
-              mode: 0o444,
-              uid: 1000,
-              gid: 1000,
-              size,
-              atime: timestamp,
-              mtime: timestamp,
-            })
-          } else if (response.status === 'notfound') {
-            sftp.status(reqID, STATUS_CODE.NO_SUCH_FILE)
-          } else {
-            sftp.status(reqID, STATUS_CODE.FAILURE)
-          }
-        }
+        // STAT expects stat on the file a link is linking to, but as we don't
+        // deal with links, it's the same as LSTAT for us
+        await handleStat(reqID, path, sftp, dispatch, host, port, ident)
       })
       .on('REMOVE', () => {
         console.log('*** REMOVE')

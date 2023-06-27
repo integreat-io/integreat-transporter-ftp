@@ -4,6 +4,10 @@ import FtpClient from 'ssh2-sftp-client'
 
 import listen from './listen.js'
 
+interface FtpClientWithLstat extends FtpClient {
+  lstat: (remotePath: string) => Promise<FtpClient.FileStats>
+}
+
 // Setup
 
 const privateKey = `-----BEGIN RSA PRIVATE KEY-----
@@ -530,6 +534,54 @@ test('should respond to incoming STAT request for file on root', async (t) => {
   const ret = await listen(dispatch, connection)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.stat(path)
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(dispatch.callCount, 1)
+  t.deepEqual(dispatch.args[0][0], expectedAction)
+  t.deepEqual(response, expected)
+})
+
+test('should respond to incoming LSTAT request for file on root', async (t) => {
+  const port = 3038
+  t.timeout(5000)
+  const dispatch = sinon.stub().resolves({ status: 'ok', data: files[0] })
+  const connection = {
+    status: 'ok',
+    incoming: { host: 'localhost', port, privateKey },
+  }
+  const options = createFtpOptions(port)
+  const client = new FtpClient()
+  client.on('error', console.error)
+  const path = '/file1.csv'
+  const expectedAction = {
+    type: 'GET',
+    payload: {
+      path: '/',
+      id: 'file1.csv',
+      host: 'localhost',
+      port,
+    },
+    meta: { ident: undefined },
+  }
+  const expected = {
+    mode: 0o444,
+    uid: 1000,
+    gid: 1000,
+    size: 26,
+    isDirectory: false,
+    isBlockDevice: false,
+    isCharacterDevice: false,
+    isFIFO: false,
+    isFile: false,
+    isSocket: false,
+    isSymbolicLink: false,
+    modifyTime: 1679231094000,
+    accessTime: 1679231094000,
+  }
+
+  const ret = await listen(dispatch, connection)
+  await t.notThrowsAsync(client.connect(options))
+  const response = await (client as FtpClientWithLstat).lstat(path) // TODO: Remove type hack when @types file for 'ssh2-sftp-client' is updated
 
   t.is(ret.status, 'ok', ret.error)
   t.is(dispatch.callCount, 1)
