@@ -4,8 +4,9 @@ Transporter that lets
 [Integreat](https://github.com/integreat-io/integreat) send and receive data
 over ftp/sftp.
 
-**Note:** We're only supporting fetching for now. You may get from a remote FTP
-server and provide a virtual SFTP server for others to fetch from.
+**Note:** We're only supporting fetching for now, except for deleting files in a
+virtual SFTP server. You may get from a remote FTP server and provide a virtual
+SFTP server for others to fetch from (and delete files).
 
 ## Getting started
 
