@@ -108,6 +108,17 @@ const formatDateTime = (time: Date) =>
 const generateLongname = (filename: string, size: number, time: Date) =>
   ['-r--r--r--  1 anon  anon ', size, formatDateTime(time), filename].join(' ')
 
+const numberIf = (pred: boolean | undefined, num: number) => (pred ? num : 0)
+
+function generateMode(access: IncomingAccess, isDir = false) {
+  const permission =
+    numberIf(access.GET, 4) +
+    numberIf(access.SET, 2) +
+    numberIf(access.DELETE, 1)
+  const dirPermissions = isDir ? 0o40000 : 0o100000
+  return dirPermissions + 0o100 * permission + 0o10 * permission + permission
+}
+
 function contentToFileInfo(item: unknown): FileEntry | undefined {
   if (isObject(item)) {
     const filename = item.id
@@ -119,7 +130,7 @@ function contentToFileInfo(item: unknown): FileEntry | undefined {
         filename,
         longname: generateLongname(filename, size, time),
         attrs: {
-          mode: 0o00444,
+          mode: generateMode({ GET: true }), // Default mode for files
           uid: 1000,
           gid: 1000,
           size,
@@ -130,17 +141,6 @@ function contentToFileInfo(item: unknown): FileEntry | undefined {
     }
   }
   return undefined
-}
-
-const numberIf = (pred: boolean | undefined, num: number) => (pred ? num : 0)
-
-function generateMode(access: IncomingAccess, isDir = false) {
-  const permission =
-    numberIf(access.GET, 4) +
-    numberIf(access.SET, 2) +
-    numberIf(access.DELETE, 1)
-  const dirPermissions = isDir ? 0o40000 : 0
-  return dirPermissions + 0o100 * permission + 0o10 * permission + permission
 }
 
 async function handleStat(
@@ -177,7 +177,7 @@ async function handleStat(
       )
 
       sftp.attrs(reqID, {
-        mode: 0o444,
+        mode: generateMode({ GET: true }), // Default mode for files
         uid: 1000,
         gid: 1000,
         size,
@@ -366,6 +366,10 @@ const startSftpSession = ({
       })
       .on('SYMLINK', () => {
         console.log('*** SYMLINK')
+      })
+      .on('end', () => {
+        debug('SFTP END')
+        sftp.end()
       })
       .on('error', (err: unknown) => {
         console.error(`*** SFTP error occurred: ${err}`)

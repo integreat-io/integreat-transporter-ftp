@@ -657,7 +657,7 @@ test('should respond to incoming STAT request for file on root', async (t) => {
     meta: { ident: undefined },
   }
   const expected = {
-    mode: 0o444,
+    mode: 0o100444,
     uid: 1000,
     gid: 1000,
     size: 26,
@@ -665,7 +665,7 @@ test('should respond to incoming STAT request for file on root', async (t) => {
     isBlockDevice: false,
     isCharacterDevice: false,
     isFIFO: false,
-    isFile: false,
+    isFile: true,
     isSocket: false,
     isSymbolicLink: false,
     modifyTime: 1679231094000,
@@ -705,7 +705,7 @@ test('should respond to incoming LSTAT request for file on root', async (t) => {
     meta: { ident: undefined },
   }
   const expected = {
-    mode: 0o444,
+    mode: 0o100444,
     uid: 1000,
     gid: 1000,
     size: 26,
@@ -713,7 +713,7 @@ test('should respond to incoming LSTAT request for file on root', async (t) => {
     isBlockDevice: false,
     isCharacterDevice: false,
     isFIFO: false,
-    isFile: false,
+    isFile: true,
     isSocket: false,
     isSymbolicLink: false,
     modifyTime: 1679231094000,
