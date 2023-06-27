@@ -6,3 +6,4 @@ dist/tests/
 tsconfig.json
 *.config.cjs
 id_*
+test*.js
