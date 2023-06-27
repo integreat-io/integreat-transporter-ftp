@@ -1,3 +1,4 @@
+import util from 'util'
 import ssh2, {
   FileEntry,
   AcceptSftpConnection,
@@ -258,8 +259,10 @@ const startSftpSession = ({
           access
         )
       })
-      .on('FSETSTAT', () => {
-        console.log('*** FSETSTAT')
+      .on('FSETSTAT', (reqID, handle, attrs) => {
+        const path = handle.toString()
+        debug(`SFTP FSETSTAT ${path} (${reqID}) ${util.inspect(attrs)}`)
+        sftp.status(reqID, STATUS_CODE.OK)
       })
       .on('CLOSE', (reqID) => {
         debug(`SFTP CLOSE (${reqID})`)
@@ -351,8 +354,9 @@ const startSftpSession = ({
       .on('READLINK', () => {
         console.log('*** READLINK')
       })
-      .on('SETSTAT', () => {
-        console.log('*** SETSTAT')
+      .on('SETSTAT', (reqID, path, attrs) => {
+        debug(`SFTP SETSTAT ${path} (${reqID}) ${util.inspect(attrs)}`)
+        sftp.status(reqID, STATUS_CODE.OK)
       })
       .on('MKDIR', () => {
         console.log('*** MKDIR')
