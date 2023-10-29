@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "debug": "^4.3.4",
-    "integreat": "^0.8.9",
+    "integreat": "^1.4.1",
     "sinon": "^15.2.0",
     "ssh2": "^1.14.0",
     "ssh2-sftp-client": "^9.1.0"
