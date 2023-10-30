@@ -33,7 +33,7 @@ const createFtpOptions = (port: number) =>
     username: 'johnf',
     password: 's3cr3t',
     // debug: console.log,
-  } as FtpClient.ConnectOptions)
+  }) as FtpClient.ConnectOptions
 
 const files = [
   {
@@ -49,6 +49,11 @@ const files = [
     updatedAt: new Date('2023-03-19T17:14:45.123Z'),
   },
 ]
+
+const authenticate = async () => ({
+  status: 'ok',
+  access: { ident: { id: 'userFromIntegreat' } },
+})
 
 // Tests -- directory
 
@@ -67,7 +72,7 @@ test('should respond to incoming ftp request for directory content', async (t) =
   const expectedAction = {
     type: 'GET',
     payload: { path: '/entries', host: 'localhost', port },
-    meta: { ident: undefined },
+    meta: { ident: { id: 'userFromIntegreat' } },
   }
   const expected = [
     {
@@ -94,7 +99,7 @@ test('should respond to incoming ftp request for directory content', async (t) =
     },
   ]
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.list(path)
 
@@ -119,7 +124,7 @@ test('should respond to incoming ftp request for directory content with path end
   const expectedAction = {
     type: 'GET',
     payload: { path: '/', host: 'localhost', port },
-    meta: { ident: undefined },
+    meta: { ident: { id: 'userFromIntegreat' } },
   }
   const expected = [
     {
@@ -146,7 +151,7 @@ test('should respond to incoming ftp request for directory content with path end
     },
   ]
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.list(path)
 
@@ -171,7 +176,7 @@ test('should respond to incoming ftp request for directory with dot path', async
   const expectedAction = {
     type: 'GET',
     payload: { path: '/', host: 'localhost', port },
-    meta: { ident: undefined },
+    meta: { ident: { id: 'userFromIntegreat' } },
   }
   const expected = [
     {
@@ -198,7 +203,7 @@ test('should respond to incoming ftp request for directory with dot path', async
     },
   ]
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.list(path)
 
@@ -223,7 +228,7 @@ test('should respond to incoming ftp request for directory with slash and dot pa
   const expectedAction = {
     type: 'GET',
     payload: { path: '/', host: 'localhost', port },
-    meta: { ident: undefined },
+    meta: { ident: { id: 'userFromIntegreat' } },
   }
   const expected = [
     {
@@ -250,7 +255,7 @@ test('should respond to incoming ftp request for directory with slash and dot pa
     },
   ]
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.list(path)
 
@@ -275,10 +280,10 @@ test('should filter away data not in the expected format', async (t) => {
   const expectedAction = {
     type: 'GET',
     payload: { path: '/entries', host: 'localhost', port },
-    meta: { ident: undefined },
+    meta: { ident: { id: 'userFromIntegreat' } },
   }
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.list(path)
 
@@ -303,7 +308,7 @@ test('should handle unknown directory', async (t) => {
   client.on('error', console.error)
   const path = '/entries'
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const err = await t.throwsAsync(client.list(path))
 
@@ -327,7 +332,7 @@ test('should handle errors from dispatch when fetching directory content', async
   client.on('error', console.error)
   const path = '/entries'
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const err = await t.throwsAsync(client.list(path))
 
@@ -350,7 +355,7 @@ test('should respond to incoming REALPATH request for directory', async (t) => {
   const path = '/entries'
   const expected = '/entries'
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.realPath(path)
 
@@ -372,7 +377,7 @@ test('should respond to incoming REALPATH request for current directory', async 
   const path = '.'
   const expected = '/'
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.realPath(path)
 
@@ -402,11 +407,11 @@ test('should respond to incoming ftp request for file content', async (t) => {
       host: 'localhost',
       port,
     },
-    meta: { ident: undefined },
+    meta: { ident: { id: 'userFromIntegreat' } },
   }
   const expected = 'id;title\n1;Line 1\n2;Line 2'
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.get(path)
 
@@ -436,11 +441,11 @@ test('should respond to incoming ftp request for file content on root', async (t
       host: 'localhost',
       port,
     },
-    meta: { ident: undefined },
+    meta: { ident: { id: 'userFromIntegreat' } },
   }
   const expected = 'id;title\n1;Line 1\n2;Line 2'
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.get(path)
 
@@ -465,7 +470,7 @@ test('should handle unknown file', async (t) => {
   client.on('error', console.error)
   const path = '/entries/file1.csv'
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const err = await t.throwsAsync(client.get(path))
 
@@ -473,7 +478,7 @@ test('should handle unknown file', async (t) => {
   t.is(dispatch.callCount, 1)
   t.is(
     (err as Error).message,
-    'get: No such file or directory /entries/file1.csv'
+    'get: No such file or directory /entries/file1.csv',
   )
 })
 
@@ -492,7 +497,7 @@ test('should handle unknown error when fetching file', async (t) => {
   client.on('error', console.error)
   const path = '/entries/file1.csv'
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const err = await t.throwsAsync(client.get(path))
 
@@ -515,7 +520,7 @@ test('should respond to incoming REALPATH request for file with full path', asyn
   const path = '/entries/file.csv'
   const expected = '/entries/file.csv'
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.realPath(path)
 
@@ -537,7 +542,7 @@ test('should respond to incoming REALPATH request for filename only', async (t) 
   const path = 'file.csv'
   const expected = '/file.csv'
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.realPath(path)
 
@@ -559,7 +564,7 @@ test('should respond to incoming REALPATH request for filename in current folder
   const path = './file.csv'
   const expected = '/file.csv'
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.realPath(path)
 
@@ -583,7 +588,7 @@ test('should respond to incoming STAT request for root directory', async (t) => 
   const path = '/'
 
   const before = Math.round(Date.now() / 1000) * 1000
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.stat(path)
   const after = Math.round(Date.now() / 1000) * 1000
@@ -618,7 +623,7 @@ test('should respond to incoming STAT request for root directory with full permi
   const path = '/'
 
   const before = Math.round(Date.now() / 1000) * 1000
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.stat(path)
   const after = Math.round(Date.now() / 1000) * 1000
@@ -654,7 +659,7 @@ test('should respond to incoming STAT request for file on root', async (t) => {
       host: 'localhost',
       port,
     },
-    meta: { ident: undefined },
+    meta: { ident: { id: 'userFromIntegreat' } },
   }
   const expected = {
     mode: 0o100444,
@@ -672,7 +677,7 @@ test('should respond to incoming STAT request for file on root', async (t) => {
     accessTime: 1679231094000,
   }
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await client.stat(path)
 
@@ -702,7 +707,7 @@ test('should respond to incoming LSTAT request for file on root', async (t) => {
       host: 'localhost',
       port,
     },
-    meta: { ident: undefined },
+    meta: { ident: { id: 'userFromIntegreat' } },
   }
   const expected = {
     mode: 0o100444,
@@ -720,7 +725,7 @@ test('should respond to incoming LSTAT request for file on root', async (t) => {
     accessTime: 1679231094000,
   }
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response = await (client as FtpClientWithLstat).lstat(path) // TODO: Remove type hack when @types file for 'ssh2-sftp-client' is updated
 
@@ -752,10 +757,10 @@ test('should dispatch DELETE action on file remove', async (t) => {
       host: 'localhost',
       port,
     },
-    meta: { ident: undefined },
+    meta: { ident: { id: 'userFromIntegreat' } },
   }
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   await client.delete(path)
 
@@ -779,7 +784,7 @@ test('should throw when trying to remove an unknown file', async (t) => {
   client.on('error', console.error)
   const path = '/file1.csv'
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const err = await t.throwsAsync(client.delete(path))
 
@@ -803,7 +808,7 @@ test('should throw when removing file fails', async (t) => {
   client.on('error', console.error)
   const path = '/file1.csv'
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const err = await t.throwsAsync(client.delete(path))
 
@@ -835,7 +840,7 @@ test('should fetch directory content and then download file', async (t) => {
   const expectedAction0 = {
     type: 'GET',
     payload: { path: '/entries', host: 'localhost', port },
-    meta: { ident: undefined },
+    meta: { ident: { id: 'userFromIntegreat' } },
   }
   const expectedAction1 = {
     type: 'GET',
@@ -845,7 +850,7 @@ test('should fetch directory content and then download file', async (t) => {
       host: 'localhost',
       port,
     },
-    meta: { ident: undefined },
+    meta: { ident: { id: 'userFromIntegreat' } },
   }
   const expected0 = [
     {
@@ -873,7 +878,7 @@ test('should fetch directory content and then download file', async (t) => {
   ]
   const expected1 = 'id;title\n1;Line 1\n2;Line 2'
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
   await t.notThrowsAsync(client.connect(options))
   const response0 = await client.list(path0)
   const response1 = await client.get(path1)
@@ -892,7 +897,9 @@ test('should authenticate with provided method', async (t) => {
   const port = 3070
   t.timeout(5000)
   const dispatch = sinon.stub().resolves({ status: 'ok', data: files[0] })
-  const authenticate = sinon.stub().resolves({ id: 'johnf' })
+  const authenticate = sinon
+    .stub()
+    .resolves({ status: 'ok', access: { ident: { id: 'johnf' } } })
   const connection = {
     status: 'ok',
     incoming: { host: 'localhost', port, privateKey },
@@ -930,7 +937,7 @@ test('should return error when no connection', async (t) => {
   const dispatch = sinon.stub().resolves({ status: 'ok', data: files })
   const connection = null
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
 
   t.is(ret.status, 'badrequest', ret.error)
   t.is(ret.error, 'FTP transporter cannot listen without a connection')
@@ -941,11 +948,11 @@ test('should return error when no host or port', async (t) => {
   const dispatch = sinon.stub().resolves({ status: 'ok', data: files })
   const connection = { status: 'ok' }
 
-  const ret = await listen(dispatch, connection)
+  const ret = await listen(dispatch, connection, authenticate)
 
   t.is(ret.status, 'badrequest', ret.error)
   t.is(
     ret.error,
-    'FTP transporter cannot listen without a host, a port, and a private key'
+    'FTP transporter cannot listen without a host, a port, and a private key',
   )
 })

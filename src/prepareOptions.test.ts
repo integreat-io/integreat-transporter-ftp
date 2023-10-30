@@ -2,6 +2,10 @@ import test from 'ava'
 
 import prepareOptions from './prepareOptions.js'
 
+// Setup
+
+const serviceId = 'ftp'
+
 // Tests
 
 test('should return options with host, port, and path', (t) => {
@@ -16,7 +20,7 @@ test('should return options with host, port, and path', (t) => {
     path: '/folder/entry1.json',
   }
 
-  const ret = prepareOptions(options)
+  const ret = prepareOptions(options, serviceId)
 
   t.deepEqual(ret, expected)
 })
@@ -31,7 +35,7 @@ test('should extract host, port, and path from uri', (t) => {
     path: '/folder/entry1.json',
   }
 
-  const ret = prepareOptions(options)
+  const ret = prepareOptions(options, serviceId)
 
   t.deepEqual(ret, expected)
 })
@@ -46,7 +50,7 @@ test('should extract root path as slash', (t) => {
     path: '/',
   }
 
-  const ret = prepareOptions(options)
+  const ret = prepareOptions(options, serviceId)
 
   t.deepEqual(ret, expected)
 })
@@ -61,7 +65,7 @@ test('should handle invalid uri', (t) => {
     path: undefined,
   }
 
-  const ret = prepareOptions(options)
+  const ret = prepareOptions(options, serviceId)
 
   t.deepEqual(ret, expected)
 })
@@ -85,7 +89,7 @@ test('should include incoming options', (t) => {
     incoming: { host: 'localhost', port: 22, privateKey: 'k3y' },
   }
 
-  const ret = prepareOptions(options)
+  const ret = prepareOptions(options, serviceId)
 
   t.deepEqual(ret, expected)
 })

@@ -1,5 +1,5 @@
 import FtpClient from 'ssh2-sftp-client'
-import { EndpointOptions, Connection } from './types.js'
+import { ServiceOptions, Connection } from './types.js'
 
 const removeKeyAndSecret = ({
   key,
@@ -17,7 +17,7 @@ const extractAuth = (auth: Record<string, unknown> | null) =>
     : {}
 
 const prepareOptions = (
-  { host, baseUri, port }: EndpointOptions,
+  { host, baseUri, port }: ServiceOptions,
   auth: Record<string, unknown> | null
 ) => ({
   ...extractAuth(auth),
@@ -27,7 +27,7 @@ const prepareOptions = (
 
 export default (Client = FtpClient) =>
   async function connect(
-    options: EndpointOptions,
+    options: ServiceOptions,
     auth: Record<string, unknown> | null,
     connection: Connection | null = null
   ): Promise<Connection> {

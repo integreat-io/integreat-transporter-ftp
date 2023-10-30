@@ -6,7 +6,7 @@ import ssh2, {
   ServerConnectionListener,
 } from 'ssh2'
 import debugFn from 'debug'
-import type { Dispatch, Ident, Response } from 'integreat'
+import type { Dispatch, Ident, Response, AuthenticateExternal } from 'integreat'
 import type { Connection, IncomingAccess } from './types.js'
 import { isObject, isNotEmpty } from './utils/is.js'
 
@@ -385,7 +385,7 @@ const startSftpSession = ({
 
 const setupSftpServer = (
   options: HandlerOptions,
-  authenticate?: (options: Record<string, unknown>) => Promise<Ident>
+  authenticate: AuthenticateExternal
 ): ServerConnectionListener =>
   function createSftpConnection(client, info) {
     debug(`SFTP connection requested by ${info.ip}`)
@@ -401,10 +401,13 @@ const setupSftpServer = (
           if (typeof authenticate !== 'function') {
             ctx.accept()
           } else {
-            ident = await authenticate({
+            const response = await authenticate({
+              status: 'ok',
               key: ctx.username,
               secret: ctx.password,
             })
+            ident = response.access?.ident
+
             ctx.accept()
           }
         } else {
@@ -446,7 +449,7 @@ const setupSftpServer = (
 export default async function listen(
   dispatch: Dispatch,
   connection: Connection | null,
-  authenticate?: (options: Record<string, unknown>) => Promise<Ident>
+  authenticate: AuthenticateExternal
 ): Promise<Response> {
   if (!connection) {
     return {

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import test from 'ava'
 import FtpClient from 'ssh2-sftp-client'
 import { SFTPWrapper } from 'ssh2'

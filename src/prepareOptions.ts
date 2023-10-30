@@ -1,5 +1,5 @@
 import url from 'url'
-import { EndpointOptions, IncomingOptions } from './types.js'
+import { ServiceOptions, IncomingOptions } from './types.js'
 import { isObject } from './utils/is.js'
 
 function extractFromUri(uri: string) {
@@ -17,7 +17,7 @@ const prepareIncoming = ({ host, port, privateKey }: IncomingOptions) => ({
   privateKey,
 })
 
-export default function (options: EndpointOptions): EndpointOptions {
+export default function (options: ServiceOptions, _serviceId: string): ServiceOptions {
   const { uri, host, port, path, incoming } = options
   const nextOptions = {
     host,
