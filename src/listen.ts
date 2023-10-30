@@ -49,7 +49,7 @@ const createGetDirectory = (
   path: string,
   host: string,
   port: number,
-  ident?: Ident
+  ident?: Ident,
 ) => ({
   type: 'GET',
   payload: { path, host, port },
@@ -60,7 +60,7 @@ const createGetFile = (
   path: string,
   host: string,
   port: number,
-  ident?: Ident
+  ident?: Ident,
 ) => ({
   type: 'GET',
   payload: { ...splitPathAndFilename(path), host, port },
@@ -71,7 +71,7 @@ const createDeleteFile = (
   path: string,
   host: string,
   port: number,
-  ident?: Ident
+  ident?: Ident,
 ) => ({
   type: 'DELETE',
   payload: { ...splitPathAndFilename(path), host, port },
@@ -98,11 +98,11 @@ const months = [
 ]
 
 const formatDateTime = (time: Date) =>
-  `${months[time.getMonth()]} ${String(time.getDate()).padStart(
+  `${months[time.getUTCMonth()]} ${String(time.getUTCDate()).padStart(
     2,
-    ' '
-  )} ${String(time.getHours()).padStart(2, '0')}:${String(
-    time.getMinutes()
+    ' ',
+  )} ${String(time.getUTCHours()).padStart(2, '0')}:${String(
+    time.getUTCMinutes(),
   ).padStart(2, '0')}`
 
 const generateLongname = (filename: string, size: number, time: Date) =>
@@ -151,7 +151,7 @@ async function handleStat(
   host: string,
   port: number,
   ident: Ident | undefined,
-  access: IncomingAccess
+  access: IncomingAccess,
 ) {
   if (isDirectory(path)) {
     const timestampSeconds = getSecondsFromMs(Date.now())
@@ -173,7 +173,7 @@ async function handleStat(
       const timestamp = getSecondsFromMs(
         response.data.updatedAt instanceof Date
           ? response.data.updatedAt.getTime()
-          : Date.now()
+          : Date.now(),
       )
 
       sftp.attrs(reqID, {
@@ -201,7 +201,7 @@ const startSftpSession = ({
 }: HandlerOptions) =>
   function startSftpSession(
     acceptSftp: AcceptSftpConnection,
-    _rejectSftp: RejectConnection
+    _rejectSftp: RejectConnection,
   ) {
     debug('Client SFTP session')
     const sftp = acceptSftp()
@@ -223,7 +223,7 @@ const startSftpSession = ({
 
         if (offset === 0) {
           const response = await dispatch(
-            createGetFile(path, host, port, ident)
+            createGetFile(path, host, port, ident),
           )
           if (
             response.status === 'ok' &&
@@ -258,7 +258,7 @@ const startSftpSession = ({
           host,
           port,
           ident,
-          access
+          access,
         )
       })
       .on('FSETSTAT', (reqID, handle, attrs) => {
@@ -285,12 +285,12 @@ const startSftpSession = ({
         if (!doneReading) {
           // Dispatch to get directory content
           const response = await dispatch(
-            createGetDirectory(path, host, port, ident)
+            createGetDirectory(path, host, port, ident),
           )
           if (response.status === 'ok' && Array.isArray(response.data)) {
             sftp.name(
               reqID,
-              response.data.map(contentToFileInfo).filter(isNotEmpty)
+              response.data.map(contentToFileInfo).filter(isNotEmpty),
             )
           } else if (response.status === 'notfound') {
             sftp.status(reqID, STATUS_CODE.NO_SUCH_FILE)
@@ -314,7 +314,7 @@ const startSftpSession = ({
           host,
           port,
           ident,
-          access
+          access,
         )
       })
       .on('STAT', async (reqID, path) => {
@@ -329,14 +329,14 @@ const startSftpSession = ({
           host,
           port,
           ident,
-          access
+          access,
         )
       })
       .on('REMOVE', async (reqID, path) => {
         debug(`SFTP REMOVE ${path} (${reqID})`)
 
         const response = await dispatch(
-          createDeleteFile(getRealPath(path), host, port, ident)
+          createDeleteFile(getRealPath(path), host, port, ident),
         )
         if (response.status === 'ok') {
           sftp.status(reqID, STATUS_CODE.OK)
@@ -385,7 +385,7 @@ const startSftpSession = ({
 
 const setupSftpServer = (
   options: HandlerOptions,
-  authenticate: AuthenticateExternal
+  authenticate: AuthenticateExternal,
 ): ServerConnectionListener =>
   function createSftpConnection(client, info) {
     debug(`SFTP connection requested by ${info.ip}`)
@@ -394,7 +394,7 @@ const setupSftpServer = (
     client
       .on('authentication', async function authenticateClient(ctx) {
         debug(
-          `User ${ctx.username} attempting to authenticate with method= ${ctx.method}`
+          `User ${ctx.username} attempting to authenticate with method= ${ctx.method}`,
         )
 
         if (ctx.method === 'password') {
@@ -449,7 +449,7 @@ const setupSftpServer = (
 export default async function listen(
   dispatch: Dispatch,
   connection: Connection | null,
-  authenticate: AuthenticateExternal
+  authenticate: AuthenticateExternal,
 ): Promise<Response> {
   if (!connection) {
     return {
@@ -478,7 +478,7 @@ export default async function listen(
   return new Promise((resolve, _reject) => {
     new ssh2.Server(
       options,
-      setupSftpServer({ dispatch, host, port, access }, authenticate)
+      setupSftpServer({ dispatch, host, port, access }, authenticate),
     ).listen(port, host, function () {
       debug('SFTP Listening on port ' + port)
       resolve({ status: 'ok' })
