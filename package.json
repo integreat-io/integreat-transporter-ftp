@@ -39,7 +39,8 @@
   },
   "dependencies": {
     "debug": "^4.3.4",
-    "ssh2": "^1.14.0"
+    "ssh2": "^1.14.0",
+    "ssh2-sftp-client": "^9.1.0"
   },
   "devDependencies": {
     "@integreat/ts-dev-setup": "^5.0.3",
@@ -48,7 +49,6 @@
     "@types/ssh2": "^1.11.15",
     "@types/ssh2-sftp-client": "^9.0.2",
     "integreat": "^1.4.1",
-    "sinon": "^17.0.0",
-    "ssh2-sftp-client": "^9.1.0"
+    "sinon": "^17.0.0"
   }
 }
