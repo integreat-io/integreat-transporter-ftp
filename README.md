@@ -107,12 +107,12 @@ The tests can be run with `npm test`.
 ## Contributing
 
 Please read
-[CONTRIBUTING](https://github.com/integreat-io/integreat-transporter-ftp/blob/master/CONTRIBUTING.md)
+[CONTRIBUTING](https://github.com/integreat-io/integreat-transporter-ftp/blob/main/CONTRIBUTING.md)
 for details on our code of conduct, and the process for submitting pull
 requests.
 
 ## License
 
 This project is licensed under the ISC License - see the
-[LICENSE](https://github.com/integreat-io/integreat-transporter-ftp/blob/master/LICENSE)
+[LICENSE](https://github.com/integreat-io/integreat-transporter-ftp/blob/main/LICENSE)
 file for details.
