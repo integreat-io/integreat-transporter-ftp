@@ -8,6 +8,9 @@ over ftp/sftp.
 virtual SFTP server. You may get from a remote FTP server and provide a virtual
 SFTP server for others to fetch from (and delete files).
 
+[![npm Version](https://img.shields.io/npm/v/integreat-transporter-ftp.svg)](https://www.npmjs.com/package/integreat-transporter-ftp)
+[![Maintainability](https://api.codeclimate.com/v1/badges/fd33397d3e8c6fa90977/maintainability)](https://codeclimate.com/github/integreat-io/integreat-transporter-ftp/maintainability)
+
 ## Getting started
 
 ### Prerequisits
