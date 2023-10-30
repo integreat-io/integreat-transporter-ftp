@@ -43,7 +43,7 @@
     "ssh2-sftp-client": "^9.1.0"
   },
   "devDependencies": {
-    "@integreat/ts-dev-setup": "^5.0.2",
+    "@integreat/ts-dev-setup": "^5.0.3",
     "@types/debug": "^4.1.10",
     "@types/sinon": "^10.0.20",
     "@types/ssh2": "^1.11.15",
