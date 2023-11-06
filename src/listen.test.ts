@@ -1,6 +1,7 @@
 import test from 'ava'
 import sinon from 'sinon'
 import FtpClient from 'ssh2-sftp-client'
+import type { Authentication } from 'integreat'
 
 import listen from './listen.js'
 
@@ -50,10 +51,15 @@ const files = [
   },
 ]
 
-const authenticate = async () => ({
-  status: 'ok',
-  access: { ident: { id: 'userFromIntegreat' } },
-})
+const authenticate = async (authentication: Authentication) =>
+  authentication.status === 'granted' &&
+  authentication.key === 'johnf' &&
+  authentication.secret === 's3cr3t'
+    ? {
+        status: 'ok',
+        access: { ident: { id: 'userFromIntegreat' } },
+      }
+    : { status: 'autherror', error: 'Not authorized' }
 
 // Tests -- directory
 

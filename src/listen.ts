@@ -402,7 +402,7 @@ const setupSftpServer = (
             ctx.accept()
           } else {
             const response = await authenticate({
-              status: 'ok',
+              status: 'granted',
               key: ctx.username,
               secret: ctx.password,
             })
