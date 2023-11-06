@@ -45,10 +45,10 @@
   "devDependencies": {
     "@integreat/ts-dev-setup": "^5.0.3",
     "@types/debug": "^4.1.10",
-    "@types/sinon": "^10.0.20",
+    "@types/sinon": "^17.0.0",
     "@types/ssh2": "^1.11.15",
     "@types/ssh2-sftp-client": "^9.0.2",
-    "integreat": "^1.4.1",
-    "sinon": "^17.0.0"
+    "integreat": "^1.4.4",
+    "sinon": "^17.0.1"
   }
 }
